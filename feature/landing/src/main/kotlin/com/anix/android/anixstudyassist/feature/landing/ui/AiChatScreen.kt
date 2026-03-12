@@ -1,6 +1,5 @@
 package com.anix.android.anixstudyassist.feature.landing.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -64,6 +63,7 @@ fun AiChatScreen(
     }
 
     Scaffold(
+        containerColor = Color(0xFFF3F4F6),
         topBar = {
             TopAppBar(
                 title = {
@@ -180,8 +180,7 @@ fun ChatInput(
                 onValueChange = onValueChange,
                 placeholder = { Text("Type your message...", fontSize = 14.sp) },
                 modifier = Modifier
-                    .weight(1f)
-                    .background(Color.Transparent),
+                    .weight(1f),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFFF5F5F5),
                     unfocusedContainerColor = Color(0xFFF5F5F5),

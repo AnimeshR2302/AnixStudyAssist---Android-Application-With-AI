@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun AiSettingsScreen(onBackClick: () -> Unit) {
     Scaffold(
+        containerColor = Color(0xFFF3F4F6),
         topBar = {
             TopAppBar(
                 title = { Text("AI Settings", color = Color.White, fontWeight = FontWeight.Bold) },

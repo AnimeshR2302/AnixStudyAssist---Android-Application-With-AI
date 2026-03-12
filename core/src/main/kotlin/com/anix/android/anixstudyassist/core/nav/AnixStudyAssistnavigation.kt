@@ -20,7 +20,9 @@ fun AnixStudyAssistNavigation(
     authScreen: @Composable (AuthScreenNavigations) -> Unit,
     landingScreen: @Composable (String, LandingScreenNavigations) -> Unit,
     classDetailsScreen: @Composable (String, ClassDetailsScreenNavigations) -> Unit,
-    settingsScreen: @Composable (SettingsScreenNavigations) -> Unit
+    settingsScreen: @Composable (SettingsScreenNavigations) -> Unit,
+    aiChatScreen: @Composable (() -> Unit, () -> Unit) -> Unit,
+    aiSettingsScreen: @Composable (() -> Unit) -> Unit
 ) {
     val backStack: NavBackStack<NavKey> = rememberNavBackStack(RootGraph.Auth)
     val pop: () -> Unit = {
@@ -58,6 +60,9 @@ fun AnixStudyAssistNavigation(
                     backStack.add(MainGraph.ClassDetails(classId))
                 }
 
+                override val onOpenAiChat: () -> Unit = {
+                    backStack.add(MainGraph.AiChat)
+                }
                 override val onOpenSettings: () -> Unit = {
                     backStack.add(MainGraph.Settings)
                 }
@@ -80,6 +85,17 @@ fun AnixStudyAssistNavigation(
                     setStack.invoke()
                 }
             })
+        }
+
+        entry<MainGraph.AiChat> {
+            aiChatScreen(
+                { pop.invoke() },
+                { backStack.add(MainGraph.AiSettings) }
+            )
+        }
+
+        entry<MainGraph.AiSettings> {
+            aiSettingsScreen { pop.invoke() }
         }
 
         entry<MainGraph.Settings> {

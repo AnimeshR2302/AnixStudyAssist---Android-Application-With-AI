@@ -21,6 +21,12 @@ sealed interface MainGraph : NavKey {
     data class ClassDetails(val classId: String) : MainGraph
 
     @Serializable
+    data object AiChat : MainGraph
+
+    @Serializable
+    data object AiSettings : MainGraph
+
+    @Serializable
     data object Settings : MainGraph
 }
 

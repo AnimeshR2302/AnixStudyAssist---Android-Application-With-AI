@@ -6,6 +6,7 @@ interface AuthScreenNavigations {
 
 interface LandingScreenNavigations {
     fun onOpenClass(classId: String)
+    val onOpenAiChat: () -> Unit
     val onOpenSettings: () -> Unit
     val onLogout: () -> Unit
 }

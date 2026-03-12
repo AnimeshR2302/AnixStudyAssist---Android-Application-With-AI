@@ -45,9 +45,11 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onSettingClick: (String) -> Unit = {}
 ) {
     Scaffold(
+        containerColor = Color(0xFFF3F4F6),
         topBar = {
             TopAppBar(
                 title = { Text("Settings", color = Color.White, fontWeight = FontWeight.Bold) },
@@ -75,20 +77,36 @@ fun SettingsScreen(
                 SettingsItem(
                     Icons.Default.Person,
                     "Profile",
-                    "Manage your profile information"
+                    "Manage your profile information",
+                    onClick = { onSettingClick("profile") }
                 )
             }
             item {
                 SettingsItem(
                     Icons.Default.Notifications,
                     "Notifications",
-                    "Configure notification preferences"
+                    "Configure notification preferences",
+                    onClick = { onSettingClick("notifications") }
                 )
             }
             item { SettingsSectionHeader("PREFERENCES") }
-            item { SettingsItem(Icons.Default.Palette, "Appearance", "Theme and display settings") }
+            item {
+                SettingsItem(
+                    Icons.Default.Palette,
+                    "Appearance",
+                    "Theme and display settings",
+                    onClick = { onSettingClick("appearance") }
+                )
+            }
             item { SettingsSectionHeader("SUPPORT") }
-            item { SettingsItem(Icons.Default.Info, "About", "App version and information") }
+            item {
+                SettingsItem(
+                    Icons.Default.Info,
+                    "About",
+                    "App version and information",
+                    onClick = { onSettingClick("about") }
+                )
+            }
             item {
                 Spacer(modifier = Modifier.height(24.dp))
                 LogoutButton(onClick = onLogoutClick)
@@ -137,11 +155,16 @@ fun SettingsSectionHeader(title: String) {
 }
 
 @Composable
-fun SettingsItem(icon: ImageVector, title: String, subtitle: String) {
+fun SettingsItem(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
+            .clickable(onClick = onClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

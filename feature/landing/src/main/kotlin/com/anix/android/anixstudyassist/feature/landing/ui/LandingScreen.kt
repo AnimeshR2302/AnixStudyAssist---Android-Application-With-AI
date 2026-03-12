@@ -50,6 +50,7 @@ fun LandingScreen(
     )
 
     Scaffold(
+        containerColor = Color(0xFFF3F4F6),
         topBar = {
             TopAppBar(
                 title = {

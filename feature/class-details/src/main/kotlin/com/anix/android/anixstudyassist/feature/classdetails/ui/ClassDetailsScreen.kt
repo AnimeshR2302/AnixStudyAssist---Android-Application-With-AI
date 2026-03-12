@@ -38,7 +38,8 @@ data class Chapter(val title: String, val progress: Float, val isCompleted: Bool
 @Composable
 fun ClassDetailsScreen(
     subjectName: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onMenuClick: () -> Unit
 ) {
     val chapters = listOf(
         Chapter("Introduction and Fundamentals", 1.0f, true),
@@ -50,6 +51,7 @@ fun ClassDetailsScreen(
     )
 
     Scaffold(
+        containerColor = Color(0xFFF3F4F6),
         topBar = {
             TopAppBar(
                 title = { Text(subjectName, color = Color.White, fontWeight = FontWeight.Bold) },
@@ -63,7 +65,7 @@ fun ClassDetailsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Handle menu */ }) {
+                    IconButton(onClick = onMenuClick) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = "More",
@@ -133,5 +135,5 @@ fun OverallProgressHeader(progress: Float) {
 @Preview(showBackground = true)
 @Composable
 fun ClassDetailsScreenPreview() {
-    ClassDetailsScreen(subjectName = "Subject", onBackClick = {})
+    ClassDetailsScreen(subjectName = "Subject", onBackClick = {}, onMenuClick = {})
 }

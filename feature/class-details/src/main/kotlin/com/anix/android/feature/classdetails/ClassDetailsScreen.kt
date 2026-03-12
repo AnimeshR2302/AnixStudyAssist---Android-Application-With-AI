@@ -1,34 +1,26 @@
 package com.anix.android.anixstudyassist.feature.classdetails
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import com.anix.android.anixstudyassist.core.nav.ClassDetailsScreenNavigations
+import com.anix.android.anixstudyassist.feature.classdetails.ui.ClassDetailsScreen as ClassDetailsScreenContent
 
 @Composable
 fun ClassDetailsScreen(
     classId: String,
     navigations: ClassDetailsScreenNavigations
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "Class Details Screen: $classId")
-        Button(onClick = navigations.onBack) {
-            Text("Back")
+    ClassDetailsScreenContent(
+        subjectName = classId.toReadableSubjectName(),
+        onBackClick = navigations.onBack,
+        onMenuClick = { navigations.onOpenSettings(classId) }
+    )
+}
+
+private fun String.toReadableSubjectName(): String {
+    return split('-', '_')
+        .filter { it.isNotBlank() }
+        .joinToString(" ") { part ->
+            part.lowercase().replaceFirstChar { it.uppercase() }
         }
-        Button(onClick = { navigations.onOpenSettings(classId) }) {
-            Text("Open Settings")
-        }
-        Button(onClick = navigations.onLogout) {
-            Text("Logout")
-        }
-    }
+        .ifBlank { this }
 }
