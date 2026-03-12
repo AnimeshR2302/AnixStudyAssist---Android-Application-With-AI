@@ -23,6 +23,20 @@ fun AnixStudyAssistNavigation(
     settingsScreen: @Composable (SettingsScreenNavigations) -> Unit
 ) {
     val backStack: NavBackStack<NavKey> = rememberNavBackStack(RootGraph.Auth)
+    val pop: () -> Unit = {
+        if (backStack.size > 1) {
+            backStack.removeAt(backStack.lastIndex)
+        }
+    }
+    val setStack: () -> Unit = {
+        val currentUser = sharedViewModel.currentUser.value
+        backStack.clear()
+        if (currentUser.isNullOrBlank()) {
+            backStack.add(RootGraph.Auth)
+        } else {
+            backStack.add(RootGraph.Main(currentUser))
+        }
+    }
     val decorators = listOf(
         rememberSaveableStateHolderNavEntryDecorator(),
         rememberViewModelStoreNavEntryDecorator<NavKey>()
@@ -33,7 +47,7 @@ fun AnixStudyAssistNavigation(
             authScreen(object : AuthScreenNavigations {
                 override fun onLoginSuccess(userId: String) {
                     sharedViewModel.setCurrentUser(userId)
-                    setStack()
+                    setStack.invoke()
                 }
             })
         }
@@ -49,35 +63,35 @@ fun AnixStudyAssistNavigation(
                 }
                 override val onLogout: () -> Unit = {
                     sharedViewModel.clearUser()
-                    setStack()
+                    setStack.invoke()
                 }
             })
         }
 
         entry<MainGraph.ClassDetails> { details ->
             classDetailsScreen(details.classId, object : ClassDetailsScreenNavigations {
-                override val onBack: () -> Unit = { pop() }
+                override val onBack: () -> Unit = { pop.invoke() }
                 override fun onOpenSettings(classId: String) {
                     backStack.add(MainGraph.Settings)
                 }
 
                 override val onLogout: () -> Unit = {
                     sharedViewModel.clearUser()
-                    setStack()
+                    setStack.invoke()
                 }
             })
         }
 
         entry<MainGraph.Settings> {
             settingsScreen(object : SettingsScreenNavigations {
-                override val onBack: () -> Unit = { pop() }
+                override val onBack: () -> Unit = { pop.invoke() }
                 override fun onOpenSetting(settingId: String) {
                     // Navigate to sub-setting if needed
                 }
 
                 override val onLogout: () -> Unit = {
                     sharedViewModel.clearUser()
-                    setStack()
+                    setStack.invoke()
                 }
             })
         }
@@ -86,16 +100,8 @@ fun AnixStudyAssistNavigation(
     NavDisplay(
         backStack = backStack,
         modifier = modifier,
-        onBack = { pop() },
+        onBack = { pop.invoke() },
         entryDecorators = decorators,
         entryProvider = entryProvider
     )
-}
-
-private fun pop() {
-    // Implementation of pop if needed, or use backStack.pop() if it exists in NavBackStack
-}
-
-private fun setStack() {
-    // Implementation of setStack if needed
 }
