@@ -1,0 +1,32 @@
+### CONTEXT FOR AI ASSISTANT: IMPLEMENTING ON-DEVICE AI WITH ML KIT GENAI
+
+**Goal:** Implement a private, offline chat feature in the `AiChatScreen` using Google's on-device AI capabilities.
+
+**Library Reference:** `com.google.android.gms:play-services-mlkit-genai`
+**Alternative Library:** `com.google.ai.client.generativeai:generativeai` (Google AI SDK for direct Gemini access)
+
+**Key Integration Steps for Prompting AI:**
+1. **Dependency:** Add `implementation("com.google.android.gms:play-services-mlkit-genai:1.0.0-beta01")` (check latest version) to `feature/landing/build.gradle.kts`.
+2. **Model Initialization:**
+   ```kotlin
+   // Using ML Kit GenAI
+   val options = GenerativeModelOptions.Builder()
+       .setCapability(GenerativeModelOptions.CAPABILITY_CHAT)
+       .build()
+   val model = GenerativeModel.getServiceClient(context, options)
+   ```
+3. **Usage Pattern (Streaming/Async):**
+   * Use `model.generateContent(prompt)` for single responses.
+   * Use `model.startChat()` to maintain state across multiple turns.
+4. **Constraints to Remember:**
+   * **Device Support:** Requires Android 12+ (API 31) and AICore compatibility (Pixel 8+, S24+).
+   * **Threading:** Perform inference on a background thread (use `viewModelScope` or `CoroutineScope`).
+   * **Initialization:** The model might need to be downloaded on first use via `ModelManager`.
+
+**Project Context for implementation:**
+* **Screen:** `AiChatScreen.kt` in `feature/landing`.
+* **State Management:** Implement a `ViewModel` to handle the `GenerativeModel` lifecycle and message list state.
+* **UI Integration:** The `messages` list in `AiChatScreen` should be updated reactively from the `ViewModel`'s StateFlow.
+
+**Important for AI Assistant:**
+When writing code, always check `isServiceAvailable()` before attempting inference. Handle the `PendingIntent` or `DownloadStatus` if the model requires a download. Prefer the high-level ML Kit API for better system resource management.

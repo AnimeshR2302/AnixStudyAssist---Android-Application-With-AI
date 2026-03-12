@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.anix.android.anixstudyassist.feature.landing"
+    namespace = "com.anix.android.feature.landing"
     compileSdk = 36
 
     defaultConfig {
@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
     implementation(libs.androidx.material3.adaptive.navigation3)
+    implementation(libs.androidx.compose.material.icons.extended)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
