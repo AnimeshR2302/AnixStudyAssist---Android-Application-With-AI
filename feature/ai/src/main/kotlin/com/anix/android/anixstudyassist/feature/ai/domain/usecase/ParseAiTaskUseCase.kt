@@ -1,10 +1,15 @@
 package com.anix.android.anixstudyassist.feature.ai.domain.usecase
 
+import android.util.Log
 import com.anix.android.anixstudyassist.feature.ai.domain.model.AiTask
 import com.anix.android.anixstudyassist.feature.ai.domain.model.RewriteTone
 import javax.inject.Inject
 
 class ParseAiTaskUseCase @Inject constructor() {
+
+    companion object {
+        private const val TAG = "AI_PARSE"
+    }
 
     operator fun invoke(rawMessage: String): AiTask? {
         val message = rawMessage.trim()
@@ -13,14 +18,18 @@ class ParseAiTaskUseCase @Inject constructor() {
         if (lowercase.startsWith("summarize:")) {
             val content = message.substringAfter(":", "").trim()
             if (content.isNotEmpty()) {
-                return AiTask.Summarize(content)
+                return AiTask.Summarize(content).also {
+                    Log.d(TAG, "Parsed summarize command. textLength=${content.length}")
+                }
             }
         }
 
         if (lowercase.startsWith("proofread:")) {
             val content = message.substringAfter(":", "").trim()
             if (content.isNotEmpty()) {
-                return AiTask.Proofread(content)
+                return AiTask.Proofread(content).also {
+                    Log.d(TAG, "Parsed proofread command. textLength=${content.length}")
+                }
             }
         }
 
@@ -39,10 +48,16 @@ class ParseAiTaskUseCase @Inject constructor() {
             }
 
             if (tone != null && content.isNotEmpty()) {
-                return AiTask.Rewrite(content, tone)
+                return AiTask.Rewrite(content, tone).also {
+                    Log.d(
+                        TAG,
+                        "Parsed rewrite command. tone=${tone.name.lowercase()} textLength=${content.length}"
+                    )
+                }
             }
         }
 
+        Log.d(TAG, "No AI task matched for input='$message'")
         return null
     }
 }

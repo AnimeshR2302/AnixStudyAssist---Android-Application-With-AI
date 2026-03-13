@@ -62,6 +62,9 @@ dependencies {
     implementation("com.google.mlkit:genai-rewriting:1.0.0-beta1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.10.2")
 
+    // ML Kit GenAI feature APIs are provided by the com.google.mlkit artifacts above.
+    // Runtime execution still depends on device-side AICore availability and supported hardware.
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

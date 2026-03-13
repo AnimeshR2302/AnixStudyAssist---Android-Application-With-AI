@@ -7,6 +7,7 @@ sealed interface AiExecutionResult {
     ) : AiExecutionResult
 
     data class Error(
-        val reason: String
+        val reason: String,
+        val diagnosticDetails: String? = null
     ) : AiExecutionResult
 }

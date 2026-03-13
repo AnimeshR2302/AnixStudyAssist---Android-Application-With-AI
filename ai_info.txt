@@ -2,11 +2,11 @@
 
 **Goal:** Implement a private, offline chat feature in the `AiChatScreen` using Google's on-device AI capabilities.
 
-**Library Reference:** `com.google.android.gms:play-services-mlkit-genai`
+**Library Reference:** `com.google.mlkit:genai-*`
 **Alternative Library:** `com.google.ai.client.generativeai:generativeai` (Google AI SDK for direct Gemini access)
 
 **Key Integration Steps for Prompting AI:**
-1. **Dependency:** Add `implementation("com.google.android.gms:play-services-mlkit-genai:1.0.0-beta01")` (check latest version) to `feature/landing/build.gradle.kts`.
+1. **Dependency:** Add the required ML Kit GenAI feature artifacts such as `implementation("com.google.mlkit:genai-summarization:1.0.0-beta1")`, `implementation("com.google.mlkit:genai-proofreading:1.0.0-beta1")`, and `implementation("com.google.mlkit:genai-rewriting:1.0.0-beta1")` to the AI feature module.
 2. **Model Initialization:**
    ```kotlin
    // Using ML Kit GenAI
@@ -19,7 +19,7 @@
    * Use `model.generateContent(prompt)` for single responses.
    * Use `model.startChat()` to maintain state across multiple turns.
 4. **Constraints to Remember:**
-   * **Device Support:** Requires Android 12+ (API 31) and AICore compatibility (Pixel 8+, S24+).
+   * **Device Support:** Requires a device supported by ML Kit GenAI feature APIs and a ready AICore installation. Support is narrower than general Android compatibility and must be checked at runtime via `checkFeatureStatus()`.
    * **Threading:** Perform inference on a background thread (use `viewModelScope` or `CoroutineScope`).
    * **Initialization:** The model might need to be downloaded on first use via `ModelManager`.
 

@@ -1,5 +1,6 @@
 package com.anix.android.anixstudyassist.feature.ai.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anix.android.anixstudyassist.feature.ai.domain.model.AiExecutionResult
@@ -23,6 +24,10 @@ class AiChatViewModel @Inject constructor(
     private val executeOnDeviceAiTaskUseCase: ExecuteOnDeviceAiTaskUseCase
 ) : ViewModel() {
 
+    companion object {
+        private const val TAG = "AI_CHAT"
+    }
+
     private val formatter = DateTimeFormatter.ofPattern("hh:mm a")
 
     private val _uiState = MutableStateFlow(AiChatUiState())
@@ -36,6 +41,7 @@ class AiChatViewModel @Inject constructor(
         val text = _uiState.value.inputText.trim()
         if (text.isBlank() || _uiState.value.isBusy) return
 
+        Log.d(TAG, "Received chat input='$text'")
         appendMessage(text = text, isFromUser = true)
         _uiState.update { it.copy(inputText = "", isBusy = true) }
 
@@ -45,15 +51,30 @@ class AiChatViewModel @Inject constructor(
                 else -> {
                     val task = parseAiTaskUseCase(text)
                     if (task == null) {
+                        Log.d(TAG, "No executable AI task produced for input='$text'")
                         "I can't run that on-device yet. Send 'hi' to view supported commands."
                     } else {
+                        Log.d(TAG, "Dispatching parsed task=$task")
                         when (val result = executeOnDeviceAiTaskUseCase(task)) {
                             is AiExecutionResult.Success -> {
+                                Log.d(
+                                    TAG,
+                                    "Task succeeded. label=${result.taskLabel} outputLength=${result.output.length}"
+                                )
                                 "Success (${result.taskLabel}):\n${result.output}"
                             }
 
                             is AiExecutionResult.Error -> {
-                                "Error: ${result.reason}"
+                                Log.e(
+                                    TAG,
+                                    "Task failed. reason=${result.reason} details=${result.diagnosticDetails}"
+                                )
+                                buildString {
+                                    append("Error: ${result.reason}")
+                                    result.diagnosticDetails?.takeIf { it.isNotBlank() }?.let {
+                                        append("\n\nDiagnostic details:\n$it")
+                                    }
+                                }
                             }
                         }
                     }
