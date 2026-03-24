@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
 
-    implementation("com.google.mlkit:genai-common:1.0.0-beta1")
+    implementation("com.google.mlkit:genai-common:1.0.0-beta3")
     implementation("com.google.mlkit:genai-summarization:1.0.0-beta1")
     implementation("com.google.mlkit:genai-proofreading:1.0.0-beta1")
     implementation("com.google.mlkit:genai-rewriting:1.0.0-beta1")

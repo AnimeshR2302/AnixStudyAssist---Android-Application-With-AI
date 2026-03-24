@@ -10,10 +10,9 @@ import androidx.compose.ui.Modifier
 import com.anix.android.anixstudyassist.core.nav.AnixStudyAssistNavigation
 import com.anix.android.anixstudyassist.core.ui.AnixStudyAssistTheme
 import com.anix.android.anixstudyassist.feature.ai.presentation.ui.AiChatScreen
-import com.anix.android.anixstudyassist.feature.auth.AuthScreen
 import com.anix.android.anixstudyassist.feature.settings.presentation.ui.AiSettingsScreen
 import com.anix.android.anixstudyassist.feature.settings.presentation.ui.SettingsScreen
-import com.anix.classdetails.anixstudyassist.feature.classdetails.presentation.ui.ClassDetailsScreen
+import com.anix.classdetails.anixstudyassist.feature.classdetails.presentation.ui.TopicScreen
 import com.anix.landing.anixstudyassist.feature.landing.presentation.ui.LandingScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -36,7 +35,7 @@ fun AnixStudyAssistApp() {
         AnixStudyAssistNavigation(
             modifier = Modifier.fillMaxSize(),
             authScreen = { navigations ->
-                AuthScreen(navigations = navigations)
+                EntryScreen(navigations = navigations)
             },
             landingScreen = { userId, navigations ->
                 LandingScreen(
@@ -47,7 +46,7 @@ fun AnixStudyAssistApp() {
                 )
             },
             classDetailsScreen = { classId, navigations ->
-                ClassDetailsScreen(
+                TopicScreen(
                     subjectName = classId.toReadableSubjectName(),
                     onBackClick = navigations.onBack,
                     onMenuClick = { navigations.onOpenSettings(classId) }

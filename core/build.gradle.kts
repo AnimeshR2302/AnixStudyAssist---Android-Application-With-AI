@@ -66,8 +66,4 @@ dependencies {
     // Retrofit
     implementation(libs.retrofit)
     implementation(libs.okhttp)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

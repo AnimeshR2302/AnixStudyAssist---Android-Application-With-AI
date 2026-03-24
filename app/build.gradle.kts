@@ -29,6 +29,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+        getByName("debug") {
+            isMinifyEnabled = true
+            proguardFiles()
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -41,9 +45,7 @@ android {
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":feature:ai"))
-    implementation(project(":feature:auth"))
-    implementation(project(":feature:class-details"))
+    implementation(project(":feature:entry"))
     implementation(project(":feature:landing"))
     implementation(project(":feature:settings"))
 
