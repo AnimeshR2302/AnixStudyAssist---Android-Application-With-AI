@@ -7,9 +7,7 @@ plugins {
 
 android {
     namespace = "com.anix.android.anixstudyassist.datahandler"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 33

@@ -8,9 +8,7 @@ plugins {
 
 android {
     namespace = "com.anix.android.anixstudyassist.ui"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         minSdk {
