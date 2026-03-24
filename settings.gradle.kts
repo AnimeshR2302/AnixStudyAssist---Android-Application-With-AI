@@ -13,7 +13,6 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
@@ -22,12 +21,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "AnixStudyAssist"
 include(":app")
-include(":core")
+include(":core:ui", ":core:data-handler", ":core:aikit")
+
 include(":feature:landing")
 include(":feature:settings")
-include(":core:ui")
 include(":feature:entry")
-include(":core:data-handler")
 include(":feature:topic")
 include(":feature:aichat")
-include(":core:aikit")
