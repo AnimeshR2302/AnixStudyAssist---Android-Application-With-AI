@@ -1,4 +1,4 @@
-package com.anix.android.anixstudyassist.aichat.presentation
+package com.anix.android.anixstudyassist.aichat.presentation.state
 
 data class ChatMessage(
     val text: String,

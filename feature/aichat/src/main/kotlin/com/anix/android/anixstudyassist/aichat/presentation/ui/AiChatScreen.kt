@@ -40,8 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.anix.android.anixstudyassist.aichat.presentation.AiChatViewModel
-import com.anix.android.anixstudyassist.aichat.presentation.ChatMessage
+import com.anix.android.anixstudyassist.aichat.presentation.state.ChatMessage
+import com.anix.android.anixstudyassist.aichat.presentation.viewmodel.AiChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -40,11 +40,11 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     // ML Kit GenAI APIs
-    implementation("com.google.mlkit:genai-common:1.0.0-beta3")
-    implementation("com.google.mlkit:genai-summarization:1.0.0-beta1")
-    implementation("com.google.mlkit:genai-proofreading:1.0.0-beta1")
-    implementation("com.google.mlkit:genai-rewriting:1.0.0-beta1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.10.2")
+    implementation(libs.genai.common)
+    implementation(libs.genai.summarization)
+    implementation(libs.genai.proofreading)
+    implementation(libs.genai.rewriting)
+    implementation(libs.kotlinx.coroutines.guava)
 
     // Testing
     testImplementation(libs.junit)

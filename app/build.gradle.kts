@@ -42,9 +42,12 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+
+    implementation(project(":core:ui"))
+    implementation(project(":feature:aichat"))
     implementation(project(":feature:entry"))
     implementation(project(":feature:landing"))
+    implementation(project(":feature:topic"))
     implementation(project(":feature:settings"))
 
     implementation(libs.androidx.core.ktx)

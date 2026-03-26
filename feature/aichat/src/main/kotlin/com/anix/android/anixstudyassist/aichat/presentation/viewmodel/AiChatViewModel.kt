@@ -1,8 +1,10 @@
-package com.anix.android.anixstudyassist.aichat.presentation
+package com.anix.android.anixstudyassist.aichat.presentation.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.anix.android.anixstudyassist.aichat.presentation.state.AiChatUiState
+import com.anix.android.anixstudyassist.aichat.presentation.state.ChatMessage
 import com.anix.android.anixstudyassist.aikit.domain.model.AiExecutionResult
 import com.anix.android.anixstudyassist.aikit.domain.usecase.ExecuteOnDeviceAiTaskUseCase
 import com.anix.android.anixstudyassist.aikit.domain.usecase.GetCapabilitiesUseCase

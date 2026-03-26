@@ -35,7 +35,9 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+
+    implementation(project(":core:data-handler"))
+
     implementation(libs.androidx.core.ktx)
 
     // Hilt
@@ -62,8 +64,4 @@ dependencies {
 
     // Retrofit
     implementation(libs.retrofit)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }
