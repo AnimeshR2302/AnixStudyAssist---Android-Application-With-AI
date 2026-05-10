@@ -14,18 +14,19 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.anix.landing.anixstudyassist.feature.landing.presentation.ui.components.SubjectCard
 
 data class Subject(val name: String, val color: Color)
@@ -38,6 +39,9 @@ fun LandingScreen(
     onSettingsClick: () -> Unit,
     onAddClick: () -> Unit
 ) {
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+
     val subjects = listOf(
         Subject("Mathematics", Color(0xFF6C63FF)),
         Subject("Physics", Color(0xFFFF6B9B)),
@@ -50,15 +54,14 @@ fun LandingScreen(
     )
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = Color(0xFFF3F4F6),
         topBar = {
-            TopAppBar(
+            LargeTopAppBar(
                 title = {
                     Text(
                         "Anix Study Assist",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        fontWeight = FontWeight.Bold
                     )
                 },
                 actions = {
@@ -73,9 +76,13 @@ fun LandingScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF6200EE)
-                )
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = Color(0xFF6200EE),
+                    scrolledContainerColor = Color(0xFF6200EE),
+                    titleContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                ),
+                scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {

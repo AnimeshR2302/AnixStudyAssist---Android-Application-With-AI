@@ -7,9 +7,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.anix.android.anixstudyassist.aichat.presentation.ui.AiChatScreen
 import com.anix.android.anixstudyassist.entry.EntryScreen
 import com.anix.android.anixstudyassist.feature.settings.presentation.ui.AiSettingsScreen
 import com.anix.android.anixstudyassist.feature.settings.presentation.ui.SettingsScreen
+import com.anix.android.anixstudyassist.topic.ui.TopicScreen
+import com.anix.android.anixstudyassist.ui.navigation.AnixStudyAssistNavigation
+import com.anix.android.anixstudyassist.ui.theme.AnixStudyAssistTheme
 import com.anix.landing.anixstudyassist.feature.landing.presentation.ui.LandingScreen
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -34,7 +38,7 @@ fun AnixStudyAssistApp() {
             authScreen = { navigations ->
                 EntryScreen(navigations = navigations)
             },
-            landingScreen = { userId, navigations ->
+            landingScreen = { _, navigations ->
                 LandingScreen(
                     onSubjectClick = navigations::onOpenClass,
                     onAiModeClick = navigations.onOpenAiChat,
