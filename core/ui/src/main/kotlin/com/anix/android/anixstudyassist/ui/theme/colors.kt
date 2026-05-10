@@ -1,7 +1,55 @@
 package com.anix.android.anixstudyassist.ui.theme
 
+import android.graphics.Color
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
+
+object AnixColors {
+    val current: AppColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAppColors.current
+}
+
+@Stable
+data class AppColors(
+    val primary: Color,
+    val background: Color,
+    val surface: Color,
+    val contentSurface: Color,
+    val mainText: Color,
+    val subText: Color,
+    val linkText: Color
+)
+
+val LocalAppColors = staticCompositionLocalOf<AppColors> {
+    error("No AppColors provided")
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun rememberAppColors(): AppColors {
+
+    return remember(
+
+    ) {
+        AppColors(
+            primary = Color(),
+            background = Color(),
+            surface = Color(),
+            contentSurface = Color(),
+            mainText = Color(),
+            subText = Color(),
+            linkText = Color()
+        )
+    }
+}
 
 val LightColorScheme = lightColorScheme(
     primary = md_theme_light_primary,

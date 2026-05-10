@@ -8,7 +8,6 @@ import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
@@ -41,16 +40,6 @@ data class AdaptiveUiInfo(
 
 val LocalAdaptiveUiInfo = compositionLocalOf<AdaptiveUiInfo> {
     error("AdaptiveUiInfo was not provided. Wrap content in AnixStudyAssistTheme.")
-}
-
-@Composable
-internal fun ProvideAdaptiveUiInfo(
-    content: @Composable () -> Unit
-) {
-    val adaptiveUiInfo = rememberAdaptiveUiInfo()
-    CompositionLocalProvider(LocalAdaptiveUiInfo provides adaptiveUiInfo) {
-        content()
-    }
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

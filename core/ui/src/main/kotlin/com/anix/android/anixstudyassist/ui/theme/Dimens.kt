@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.anix.android.anixstudyassist.ui.common.AdaptiveUiInfo
 import com.anix.android.anixstudyassist.ui.common.computeAdaptiveScaleFactors
 
-object AnixStudyAssistLayout {
+object AnixDimens {
     val dimens: AdaptiveDimens
         @Composable
         @ReadOnlyComposable

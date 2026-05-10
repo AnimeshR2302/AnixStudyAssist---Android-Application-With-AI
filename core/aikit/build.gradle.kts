@@ -2,11 +2,16 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.secretsPlugin)
 }
 
 android {
     namespace = "com.anix.android.anixstudyassist.aikit"
     compileSdk = 36
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         minSdk = 33

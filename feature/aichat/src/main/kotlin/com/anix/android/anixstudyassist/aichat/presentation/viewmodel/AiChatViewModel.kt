@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anix.android.anixstudyassist.aichat.presentation.state.AiChatUiState
 import com.anix.android.anixstudyassist.aichat.presentation.state.ChatMessage
+import com.anix.android.anixstudyassist.aichat.presentation.voice.VoiceManager
 import com.anix.android.anixstudyassist.aikit.domain.model.AiExecutionResult
 import com.anix.android.anixstudyassist.aikit.domain.usecase.ExecuteOnDeviceAiTaskUseCase
+import com.anix.android.anixstudyassist.aikit.domain.usecase.ExecuteOnlineAiTaskUseCase
 import com.anix.android.anixstudyassist.aikit.domain.usecase.GetCapabilitiesUseCase
 import com.anix.android.anixstudyassist.aikit.domain.usecase.ParseAiTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +25,9 @@ import javax.inject.Inject
 class AiChatViewModel @Inject constructor(
     private val getCapabilitiesUseCase: GetCapabilitiesUseCase,
     private val parseAiTaskUseCase: ParseAiTaskUseCase,
-    private val executeOnDeviceAiTaskUseCase: ExecuteOnDeviceAiTaskUseCase
+    private val executeOnDeviceAiTaskUseCase: ExecuteOnDeviceAiTaskUseCase,
+    private val executeOnlineAiTaskUseCase: ExecuteOnlineAiTaskUseCase,
+    private val voiceManager: VoiceManager
 ) : ViewModel() {
 
     companion object {
@@ -43,18 +47,42 @@ class AiChatViewModel @Inject constructor(
         val text = _uiState.value.inputText.trim()
         if (text.isBlank() || _uiState.value.isBusy) return
 
-        Log.d(TAG, "Received chat input='$text'")
+        processInput(text)
+    }
+
+    fun onMicClicked() {
+        if (_uiState.value.isListening) {
+            voiceManager.stopListening()
+            _uiState.update { it.copy(isListening = false) }
+        } else {
+            _uiState.update { it.copy(isListening = true) }
+            voiceManager.startListening(
+                onResult = { result ->
+                    _uiState.update { it.copy(isListening = false, inputText = result) }
+                    processInput(result)
+                },
+                onError = { error ->
+                    Log.e(TAG, "Voice Error: $error")
+                    _uiState.update { it.copy(isListening = false) }
+                }
+            )
+        }
+    }
+
+    private fun processInput(text: String) {
+        Log.d(TAG, "Processing input='$text'")
         appendMessage(text = text, isFromUser = true)
         _uiState.update { it.copy(inputText = "", isBusy = true) }
 
         viewModelScope.launch {
+            val lowercaseText = text.lowercase(java.util.Locale.ROOT)
             val reply = when {
-                text.equals("hi", ignoreCase = true) -> buildCapabilitiesReply()
+                lowercaseText == "hi" -> buildCapabilitiesReply()
                 else -> {
                     val task = parseAiTaskUseCase(text)
                     if (task == null) {
-                        Log.d(TAG, "No executable AI task produced for input='$text'")
-                        "I can't run that on-device yet. Send 'hi' to view supported commands."
+                        Log.d(TAG, "No on-device task, falling back to Online AI for input='$text'")
+                        executeOnlineAiTaskUseCase(text)
                     } else {
                         Log.d(TAG, "Dispatching parsed task=$task")
                         when (val result = executeOnDeviceAiTaskUseCase(task)) {
@@ -84,8 +112,14 @@ class AiChatViewModel @Inject constructor(
             }
 
             appendMessage(text = reply, isFromUser = false)
+            voiceManager.speak(reply)
             _uiState.update { it.copy(isBusy = false) }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        voiceManager.shutdown()
     }
 
     private fun buildCapabilitiesReply(): String {

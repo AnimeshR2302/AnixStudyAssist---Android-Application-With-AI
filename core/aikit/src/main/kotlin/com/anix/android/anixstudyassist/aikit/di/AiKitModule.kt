@@ -2,7 +2,9 @@ package com.anix.android.anixstudyassist.aikit.di
 
 import android.content.Context
 import com.anix.android.anixstudyassist.aikit.data.repository.OnDeviceAiRepositoryImpl
+import com.anix.android.anixstudyassist.aikit.data.repository.OnlineAiRepositoryImpl
 import com.anix.android.anixstudyassist.aikit.domain.repository.OnDeviceAiRepository
+import com.anix.android.anixstudyassist.aikit.domain.repository.OnlineAiRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,5 +22,11 @@ object AiKitModule {
         @ApplicationContext context: Context
     ): OnDeviceAiRepository {
         return OnDeviceAiRepositoryImpl(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnlineAiRepository(): OnlineAiRepository {
+        return OnlineAiRepositoryImpl()
     }
 }
