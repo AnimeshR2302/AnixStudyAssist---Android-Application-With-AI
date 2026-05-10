@@ -74,7 +74,7 @@ fun anixStudyAssistTypography(): Typography {
 }
 
 @Composable
-private fun anixStudyAssistTextStyle(token: AnixStudyAssistTextStyleToken): TextStyle {
+fun anixStudyAssistTextStyle(token: AnixStudyAssistTextStyleToken): TextStyle {
     val baseSize: TextUnit = token.size.fontSizeSp.sp
     val lineHeight = lineHeightFor(token.size, token.weight).sp
 
