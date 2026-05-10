@@ -74,7 +74,7 @@ fun anixStudyAssistTypography(): Typography {
 }
 
 @Composable
-fun anixStudyAssistTextStyle(token: AnixStudyAssistTextStyleToken): TextStyle {
+private fun anixStudyAssistTextStyle(token: AnixStudyAssistTextStyleToken): TextStyle {
     val baseSize: TextUnit = token.size.fontSizeSp.sp
     val lineHeight = lineHeightFor(token.size, token.weight).sp
 
@@ -87,7 +87,7 @@ fun anixStudyAssistTextStyle(token: AnixStudyAssistTextStyleToken): TextStyle {
     )
 }
 
-internal fun lineHeightFor(size: TextSizeToken, weight: TextWeightToken): Int {
+private fun lineHeightFor(size: TextSizeToken, weight: TextWeightToken): Int {
     return lineHeightMatrix[size to weight]
         ?: error("Missing line-height mapping for $size and $weight")
 }

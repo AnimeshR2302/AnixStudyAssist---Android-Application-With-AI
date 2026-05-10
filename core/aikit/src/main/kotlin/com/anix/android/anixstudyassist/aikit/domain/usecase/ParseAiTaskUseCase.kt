@@ -8,7 +8,7 @@ import javax.inject.Inject
 class ParseAiTaskUseCase @Inject constructor() {
 
     companion object {
-        private const val TAG = "AI_PARSE"
+        private const val TAG = "ANIX_AiParse"
     }
 
     operator fun invoke(rawMessage: String): AiTask? {

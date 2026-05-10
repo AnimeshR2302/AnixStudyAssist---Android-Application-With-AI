@@ -17,7 +17,8 @@ fun AnixStudyAssistTheme(
             colorScheme = if (isSystemInDarkTheme()) DarkColorScheme else LightColorScheme,
             typography = anixStudyAssistTypography()
         ) {
-            AnixStudyAssistBaseLayout(
+
+        AnixStudyAssistBaseLayout(
                 topAppBar = topAppBar,
                 content = content
             )

@@ -16,14 +16,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+
+object AnixAdaptiveUiInfo {
+    val current: AdaptiveUiInfo
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalAdaptiveUiInfo.current
+}
 
 @Stable
 data class AdaptiveUiInfo(
     val windowWidthSizeClass: WindowWidthSizeClass,
     val windowHeightSizeClass: WindowHeightSizeClass,
-    val orientation: Int,
     val screenWidthDp: Int,
     val screenHeightDp: Int,
+    val orientation: Int,
     val smallestScreenWidthDp: Int,
     val density: Float,
     val densityDpi: Int,
@@ -33,13 +41,6 @@ data class AdaptiveUiInfo(
 
 val LocalAdaptiveUiInfo = compositionLocalOf<AdaptiveUiInfo> {
     error("AdaptiveUiInfo was not provided. Wrap content in AnixStudyAssistTheme.")
-}
-
-object AnixStudyAssistAdaptive {
-    val current: AdaptiveUiInfo
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalAdaptiveUiInfo.current
 }
 
 @Composable
@@ -54,25 +55,29 @@ internal fun ProvideAdaptiveUiInfo(
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-internal fun rememberAdaptiveUiInfo(): AdaptiveUiInfo {
+fun rememberAdaptiveUiInfo(): AdaptiveUiInfo {
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
     val context = LocalContext.current
+    val localContainerSize = LocalWindowInfo.current.containerSize
 
     val activity = context.findActivityOrNull()
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
 
+    val widthDp = with(density) { localContainerSize.width.toDp().value.toInt() }
+    val heightDp = with(density) { localContainerSize.height.toDp().value.toInt() }
+
     val widthSizeClass = windowSizeClass?.widthSizeClass
-        ?: widthSizeClassFromDp(configuration.screenWidthDp)
+        ?: widthSizeClassFromDp(widthDp)
     val heightSizeClass = windowSizeClass?.heightSizeClass
-        ?: heightSizeClassFromDp(configuration.screenHeightDp)
+        ?: heightSizeClassFromDp(heightDp)
 
     return remember(
         widthSizeClass,
         heightSizeClass,
+        widthDp,
+        heightDp,
         configuration.orientation,
-        configuration.screenWidthDp,
-        configuration.screenHeightDp,
         configuration.smallestScreenWidthDp,
         configuration.densityDpi,
         density.density,
@@ -81,9 +86,9 @@ internal fun rememberAdaptiveUiInfo(): AdaptiveUiInfo {
         AdaptiveUiInfo(
             windowWidthSizeClass = widthSizeClass,
             windowHeightSizeClass = heightSizeClass,
+            screenWidthDp = widthDp,
+            screenHeightDp = heightDp,
             orientation = configuration.orientation,
-            screenWidthDp = configuration.screenWidthDp,
-            screenHeightDp = configuration.screenHeightDp,
             smallestScreenWidthDp = configuration.smallestScreenWidthDp,
             density = density.density,
             densityDpi = configuration.densityDpi,
@@ -93,13 +98,13 @@ internal fun rememberAdaptiveUiInfo(): AdaptiveUiInfo {
     }
 }
 
-internal fun widthSizeClassFromDp(widthDp: Int): WindowWidthSizeClass = when {
+private fun widthSizeClassFromDp(widthDp: Int): WindowWidthSizeClass = when {
     widthDp < 600 -> WindowWidthSizeClass.Compact
     widthDp < 840 -> WindowWidthSizeClass.Medium
     else -> WindowWidthSizeClass.Expanded
 }
 
-internal fun heightSizeClassFromDp(heightDp: Int): WindowHeightSizeClass = when {
+private fun heightSizeClassFromDp(heightDp: Int): WindowHeightSizeClass = when {
     heightDp < 480 -> WindowHeightSizeClass.Compact
     heightDp < 900 -> WindowHeightSizeClass.Medium
     else -> WindowHeightSizeClass.Expanded

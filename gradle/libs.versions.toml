@@ -1,88 +1,95 @@
 [versions]
-compileSdk = "36"
+#SDK Versions
+compileSdk = "37"
 targetSdk = "36"
 minSdk = "33"
-genaiCommon = "1.0.0-beta3"
-genaiSummarization = "1.0.0-beta1"
-gradle = "9.4.0"
-agp = "9.2.1"
-coreKtx = "1.18.0"
-junit = "4.13.2"
-junitVersion = "1.3.0"
-espressoCore = "3.7.0"
-kotlinxCoroutinesGuava = "1.11.0"
-lifecycleRuntimeKtx = "2.10.0"
-activityCompose = "1.13.0"
-kotlin = "2.3.21"
-composeBom = "2026.05.00"
-material3 = "1.4.0"
-material3Adaptive = "1.2.0"
-hilt = "2.59.2"
-windowSizeClass = "1.2.0"
-retrofit = "3.0.0"
-ksp = "2.3.5"
-okhttp = "5.3.2"
-coroutinesTest = "1.11.0"
+
+# Library Versions
+vl-generativeai = "0.9.0"
+vl-guava = "33.6.0-android"
+vl-genaiCommon = "1.0.0-beta3"
+vl-genaiSummarization = "1.0.0-beta1"
+vp-gradle = "9.4.0"
+vp-agp = "9.2.1"
+vl-coreKtx = "1.18.0"
+vl-junit = "4.13.2"
+vl-junitVersion = "1.3.0"
+vl-espressoCore = "3.7.0"
+vl-kotlinxCoroutinesGuava = "1.11.0"
+vl-lifecycleRuntimeKtx = "2.10.0"
+vl-activityCompose = "1.13.0"
+vp-kotlin = "2.3.21"
+vb-composeBom = "2026.05.00"
+vl-material3 = "1.4.0"
+vl-material3Adaptive = "1.4.0"
+vl-hilt = "2.59.2"
+vl-windowSizeClass = "1.4.0"
+vl-retrofit = "3.0.0"
+vp-ksp = "2.3.5"
+vl-okhttp = "5.3.2"
+vl-coroutinesTest = "1.11.0"
 
 # Navigation
-navigationCompose = "2.9.8"
-hiltNavigationCompose = "1.3.0"
+vl-navigationCompose = "2.9.8"
+vl-hiltNavigationCompose = "1.3.0"
 
 # Navigation 3
-navigation3 = "1.1.1"
-lifecycleViewmodelNav3 = "2.10.0"
-kotlinSerialization = "2.3.21"
-kotlinxSerializationCore = "1.11.0"
-material3AdaptiveNav3 = "1.2.0"
-appcompat = "1.7.1"
-material = "1.13.0"
+vl-navigation3 = "1.1.1"
+vl-lifecycleViewmodelNav3 = "2.10.0"
+vp-kotlinSerialization = "2.3.21"
+vl-kotlinxSerializationCore = "1.11.0"
+vl-material3AdaptiveNav3 = "1.0.0-alpha03"
+vl-appcompat = "1.7.1"
+vl-material = "1.13.0"
 
 [libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-genai-common = { module = "com.google.mlkit:genai-common", version.ref = "genaiCommon" }
-genai-proofreading = { module = "com.google.mlkit:genai-proofreading", version.ref = "genaiSummarization" }
-genai-rewriting = { module = "com.google.mlkit:genai-rewriting", version.ref = "genaiSummarization" }
-genai-summarization = { module = "com.google.mlkit:genai-summarization", version.ref = "genaiSummarization" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "vl-coreKtx" }
+genai-common = { module = "com.google.mlkit:genai-common", version.ref = "vl-genaiCommon" }
+genai-proofreading = { module = "com.google.mlkit:genai-proofreading", version.ref = "vl-genaiSummarization" }
+genai-rewriting = { module = "com.google.mlkit:genai-rewriting", version.ref = "vl-genaiSummarization" }
+genai-summarization = { module = "com.google.mlkit:genai-summarization", version.ref = "vl-genaiSummarization" }
+generativeai = { module = "com.google.ai.client.generativeai:generativeai", version.ref = "vl-generativeai" }
+junit = { group = "junit", name = "junit", version.ref = "vl-junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "vl-junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "vl-espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "vl-lifecycleRuntimeKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "vl-activityCompose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "vb-composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
-androidx-compose-material3-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite", version.ref = "material3Adaptive" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "vl-material3" }
+androidx-compose-material3-adaptive-navigation-suite = { group = "androidx.compose.material3", name = "material3-adaptive-navigation-suite", version.ref = "vl-material3Adaptive" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
-hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
-androidx-compose-material3-windowSizeClass = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "windowSizeClass" }
-kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "kotlinxCoroutinesGuava" }
-retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
-kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "vl-hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "vl-hilt" }
+androidx-compose-material3-windowSizeClass = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "vl-windowSizeClass" }
+kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "vl-kotlinxCoroutinesGuava" }
+guava = { module = "com.google.guava:guava", version.ref = "vl-guava" }
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "vl-retrofit" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "vl-okhttp" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "vl-coroutinesTest" }
 
 # Navigation
-androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
-androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "vl-navigationCompose" }
+androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "vl-hiltNavigationCompose" }
 
 # Navigation 3 libraries
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
-androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
-androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
-androidx-material3-adaptive-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "material3AdaptiveNav3" }
-kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinxSerializationCore" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "vl-navigation3" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "vl-navigation3" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "vl-lifecycleViewmodelNav3" }
+androidx-material3-adaptive-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "vl-material3AdaptiveNav3" }
+kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "vl-kotlinxSerializationCore" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "vl-appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "vl-material" }
 
 [plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-android-library = { id = "com.android.library", version.ref = "agp" }
-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization" }
+android-application = { id = "com.android.application", version.ref = "vp-agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "vp-kotlin" }
+android-library = { id = "com.android.library", version.ref = "vp-agp" }
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "vl-hilt" }
+google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "vp-ksp" }
+jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "vp-kotlinSerialization" }

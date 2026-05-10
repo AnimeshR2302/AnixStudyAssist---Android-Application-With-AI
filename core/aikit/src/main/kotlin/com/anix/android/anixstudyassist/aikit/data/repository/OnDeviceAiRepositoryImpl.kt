@@ -9,17 +9,17 @@ import com.anix.android.anixstudyassist.aikit.domain.repository.OnDeviceAiReposi
 import com.google.mlkit.genai.common.DownloadCallback
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.common.GenAiException
-import com.google.mlkit.genai.proofreading.ProofreaderOptions
 import com.google.mlkit.genai.proofreading.Proofreader
+import com.google.mlkit.genai.proofreading.ProofreaderOptions
 import com.google.mlkit.genai.proofreading.Proofreading
 import com.google.mlkit.genai.proofreading.ProofreadingRequest
 import com.google.mlkit.genai.rewriting.Rewriter
 import com.google.mlkit.genai.rewriting.RewriterOptions
 import com.google.mlkit.genai.rewriting.Rewriting
 import com.google.mlkit.genai.rewriting.RewritingRequest
-import com.google.mlkit.genai.summarization.Summarizer
 import com.google.mlkit.genai.summarization.Summarization
 import com.google.mlkit.genai.summarization.SummarizationRequest
+import com.google.mlkit.genai.summarization.Summarizer
 import com.google.mlkit.genai.summarization.SummarizerOptions
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -33,7 +33,7 @@ class OnDeviceAiRepositoryImpl @Inject constructor(
 ) : OnDeviceAiRepository {
 
     companion object {
-        private const val TAG = "AI_EXECUTION"
+        private const val TAG = "ANIX_AiExecution"
     }
 
     private val taskExecutors: Map<KClass<out AiTask>, suspend (AiTask) -> AiExecutionResult> = mapOf(

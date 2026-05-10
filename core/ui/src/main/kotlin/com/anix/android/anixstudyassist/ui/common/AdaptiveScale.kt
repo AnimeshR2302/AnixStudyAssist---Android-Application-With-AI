@@ -30,7 +30,7 @@ internal enum class ExtremeScaleCase {
 @Composable
 @ReadOnlyComposable
 fun adaptiveDp(base: Dp): Dp {
-    val scale = computeAdaptiveScaleFactors(AnixStudyAssistAdaptive.current).dpScale
+    val scale = computeAdaptiveScaleFactors(AnixAdaptiveUiInfo.current).dpScale
     return base * scale
 }
 
@@ -38,7 +38,7 @@ fun adaptiveDp(base: Dp): Dp {
 @ReadOnlyComposable
 fun adaptiveSp(base: TextUnit): TextUnit {
     if (base.type != TextUnitType.Sp) return base
-    val scale = computeAdaptiveScaleFactors(AnixStudyAssistAdaptive.current).spScale
+    val scale = computeAdaptiveScaleFactors(AnixAdaptiveUiInfo.current).spScale
     return (base.value * scale).sp
 }
 
