@@ -1,6 +1,5 @@
 package com.anix.android.anixstudyassist.ui.theme
 
-import android.graphics.Color
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -9,6 +8,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 
 object AnixColors {
     val current: AppColors
@@ -36,17 +36,15 @@ val LocalAppColors = staticCompositionLocalOf<AppColors> {
 @Composable
 fun rememberAppColors(): AppColors {
 
-    return remember(
-
-    ) {
+    return remember {
         AppColors(
-            primary = Color(),
-            background = Color(),
-            surface = Color(),
-            contentSurface = Color(),
-            mainText = Color(),
-            subText = Color(),
-            linkText = Color()
+            primary = Color(0xFF6200EE),
+            background = Color.White.copy(alpha = 0.45f),
+            surface = Color(0xFF6200EE),
+            contentSurface = Color.White,
+            mainText = Color.Black,
+            subText = Color.Gray,
+            linkText = Color.Black
         )
     }
 }

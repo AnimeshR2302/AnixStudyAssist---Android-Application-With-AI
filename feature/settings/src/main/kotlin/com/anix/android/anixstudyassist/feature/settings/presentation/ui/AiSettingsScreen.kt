@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.anix.android.anixstudyassist.ui.theme.AnixColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,6 +128,8 @@ fun AiSettingsItem(icon: ImageVector, title: String, subtitle: String, value: St
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val colors = AnixColors.current
+
         Icon(
             icon,
             contentDescription = null,
@@ -135,13 +138,13 @@ fun AiSettingsItem(icon: ImageVector, title: String, subtitle: String, value: St
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            Text(subtitle, color = Color.Gray, fontSize = 12.sp)
+            Text(title, color = colors.mainText, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+            Text(subtitle, color = colors.subText, fontSize = 12.sp)
         }
         if (value.isNotEmpty()) {
             Text(
                 value,
-                color = Color.Gray,
+                color = colors.primary,
                 fontSize = 14.sp,
                 modifier = Modifier.padding(end = 8.dp)
             )

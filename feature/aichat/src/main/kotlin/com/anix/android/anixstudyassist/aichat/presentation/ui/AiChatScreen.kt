@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.anix.android.anixstudyassist.aichat.presentation.state.ChatMessage
 import com.anix.android.anixstudyassist.aichat.presentation.viewmodel.AiChatViewModel
+import com.anix.android.anixstudyassist.ui.theme.AnixColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,24 +129,25 @@ fun AiChatScreen(
 
 @Composable
 private fun ChatBubble(message: ChatMessage) {
+    val colors = AnixColors.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = if (message.isFromUser) Alignment.End else Alignment.Start
     ) {
         Surface(
             shape = RoundedCornerShape(12.dp),
-            color = if (message.isFromUser) Color(0xFF6200EE) else Color(0xFFF5F5F5),
+            color = if (message.isFromUser) colors.primary else colors.mainText,
             tonalElevation = 2.dp
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = message.text,
-                    color = if (message.isFromUser) Color.White else Color.Black,
+                    color = if (message.isFromUser) colors.surface else colors.mainText,
                     fontSize = 14.sp
                 )
                 Text(
                     text = message.time,
-                    color = if (message.isFromUser) Color.White.copy(alpha = 0.7f) else Color.Gray,
+                    color = colors.subText,
                     fontSize = 10.sp,
                     modifier = Modifier.align(Alignment.Start)
                 )
@@ -161,6 +163,8 @@ private fun ChatInput(
     onValueChange: (String) -> Unit,
     onSendClick: () -> Unit
 ) {
+    val colors = AnixColors.current
+
     Surface(
         tonalElevation = 4.dp,
         modifier = Modifier.fillMaxWidth()
@@ -174,7 +178,13 @@ private fun ChatInput(
             TextField(
                 value = value,
                 onValueChange = onValueChange,
-                placeholder = { Text("Type your message...", fontSize = 14.sp) },
+                placeholder = {
+                    Text(
+                        "Type your message...",
+                        color = colors.mainText,
+                        fontSize = 14.sp
+                    )
+                },
                 modifier = Modifier.weight(1f),
                 enabled = !isBusy,
                 colors = TextFieldDefaults.colors(

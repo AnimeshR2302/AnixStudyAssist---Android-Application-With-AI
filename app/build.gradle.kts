@@ -7,11 +7,12 @@ plugins {
 
 android {
     namespace = "com.anix.android.anixstudyassist"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.anix.android.anixstudyassist"
         minSdk = 33
+        //noinspection OldTargetApi
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -27,8 +28,9 @@ android {
                 "proguard-rules.pro"
             )
         }
-        getByName("debug") {
+        debug {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles()
         }
     }

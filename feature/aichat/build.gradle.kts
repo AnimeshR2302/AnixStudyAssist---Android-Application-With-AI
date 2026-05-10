@@ -34,6 +34,8 @@ android {
 dependencies {
 
     implementation(project(":core:aikit"))
+    implementation(project(":core:ui"))
+
     implementation(libs.androidx.core.ktx)
 
     // Hilt

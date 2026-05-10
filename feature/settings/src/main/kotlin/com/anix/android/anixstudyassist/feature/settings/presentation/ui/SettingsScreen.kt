@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.anix.android.anixstudyassist.ui.theme.AnixColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,6 +119,7 @@ fun SettingsScreen(
 
 @Composable
 fun UserProfileHeader() {
+    val colors = AnixColors.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -138,8 +140,13 @@ fun UserProfileHeader() {
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text("Student User", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text("student@example.com", color = Color.Gray, fontSize = 14.sp)
+            Text(
+                "Student User",
+                color = colors.mainText,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            Text("student@example.com", color = colors.subText, fontSize = 14.sp)
         }
     }
 }
@@ -162,6 +169,8 @@ fun SettingsItem(
     subtitle: String,
     onClick: () -> Unit
 ) {
+    val colors = AnixColors.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -172,8 +181,13 @@ fun SettingsItem(
         Icon(icon, contentDescription = null, tint = Color.Gray)
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
-            Text(subtitle, color = Color.Gray, fontSize = 12.sp)
+            Text(
+                text = title,
+                color = colors.mainText,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp
+            )
+            Text(text = subtitle, color = colors.subText, fontSize = 12.sp)
         }
         Icon(
             Icons.AutoMirrored.Filled.KeyboardArrowRight,
