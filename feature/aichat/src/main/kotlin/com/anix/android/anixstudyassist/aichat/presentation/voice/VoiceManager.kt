@@ -48,6 +48,11 @@ class VoiceManager @Inject constructor(
         this.onResult = onResult
         this.onError = onError
 
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+            onError("Speech recognition not available on this device")
+            return
+        }
+
         if (speechRecognizer == null) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
                 setRecognitionListener(this@VoiceManager)
@@ -69,7 +74,15 @@ class VoiceManager @Inject constructor(
         speechRecognizer?.stopListening()
     }
 
+    private fun clearCallbacks() {
+        onResult = null
+        onError = null
+    }
+
     fun speak(text: String) {
+        if (textToSpeech == null) {
+            initializeTts()
+        }
         if (isTtsReady) {
             textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
         }
@@ -77,7 +90,10 @@ class VoiceManager @Inject constructor(
 
     fun shutdown() {
         speechRecognizer?.destroy()
+        speechRecognizer = null
         textToSpeech?.shutdown()
+        textToSpeech = null
+        isTtsReady = false
     }
 
     // RecognitionListener Callbacks
@@ -109,6 +125,7 @@ class VoiceManager @Inject constructor(
             else -> "Unknown error"
         }
         onError?.invoke(errorMessage)
+        clearCallbacks()
     }
 
     override fun onResults(results: Bundle?) {
@@ -116,6 +133,7 @@ class VoiceManager @Inject constructor(
         if (!matches.isNullOrEmpty()) {
             onResult?.invoke(matches[0])
         }
+        clearCallbacks()
     }
 
     override fun onPartialResults(partialResults: Bundle?) {}

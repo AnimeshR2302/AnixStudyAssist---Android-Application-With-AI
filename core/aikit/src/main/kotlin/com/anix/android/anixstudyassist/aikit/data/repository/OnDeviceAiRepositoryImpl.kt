@@ -26,32 +26,22 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.reflect.KClass
 
-class OnDeviceAiRepositoryImpl @Inject constructor(
-    private val context: Context
-) : OnDeviceAiRepository {
+class OnDeviceAiRepositoryImpl @Inject constructor(private val context: Context) :
+    OnDeviceAiRepository {
 
     companion object {
         private const val TAG = "ANIX_AiExecution"
     }
 
-    private val taskExecutors: Map<KClass<out AiTask>, suspend (AiTask) -> AiExecutionResult> = mapOf(
-        AiTask.Summarize::class to { task -> runSummarization(task as AiTask.Summarize) },
-        AiTask.Proofread::class to { task -> runProofreading(task as AiTask.Proofread) },
-        AiTask.Rewrite::class to { task -> runRewriting(task as AiTask.Rewrite) }
-    )
-
-    override suspend fun execute(task: AiTask): AiExecutionResult {
-        val executor = taskExecutors[task::class]
-            ?: return AiExecutionResult.Error(
-                reason = "Unsupported on-device AI task.",
-                diagnosticDetails = "No executor registered for ${task::class.qualifiedName}."
-            )
-
+    override suspend fun executeOnDeviceTask(task: AiTask): AiExecutionResult {
         Log.d(TAG, "Executing task=${task.describeForLog()}")
         return try {
-            executor(task)
+            when (task) {
+                is AiTask.Summarize -> runSummarization(task)
+                is AiTask.Rewrite -> runRewriting(task)
+                is AiTask.Proofread -> runProofreading(task)
+            }
         } catch (error: Throwable) {
             Log.e(TAG, "Unhandled task failure for ${task.describeForLog()}", error)
             AiExecutionResult.Error(
@@ -67,14 +57,15 @@ class OnDeviceAiRepositoryImpl @Inject constructor(
 
     private suspend fun runSummarization(task: AiTask.Summarize): AiExecutionResult {
         Log.d(TAG, "Creating summarizer client for textLength=${task.text.length}")
-        val options = SummarizerOptions.builder(context)
-            .setLanguage(SummarizerOptions.Language.ENGLISH)
-            .setInputType(SummarizerOptions.InputType.ARTICLE)
-            .setOutputType(SummarizerOptions.OutputType.THREE_BULLETS)
-            .setLongInputAutoTruncationEnabled(true)
-            .build()
 
-        val client = Summarization.getClient(options)
+        val summarizerOptions = SummarizerOptions.builder(context).apply {
+            setLanguage(SummarizerOptions.Language.ENGLISH)
+            setInputType(SummarizerOptions.InputType.ARTICLE)
+            setOutputType(SummarizerOptions.OutputType.THREE_BULLETS)
+            setLongInputAutoTruncationEnabled(true)
+        }.build()
+        val client = Summarization.getClient(summarizerOptions)
+
         return try {
             executeWithFeatureReadiness(
                 taskName = "Summarization",
@@ -180,7 +171,10 @@ class OnDeviceAiRepositoryImpl @Inject constructor(
             }
 
             FeatureStatus.DOWNLOADING -> {
-                Log.d(TAG, "Feature already downloading for $taskName. Inference request will wait on model availability.")
+                Log.d(
+                    TAG,
+                    "Feature already downloading for $taskName. Inference request will wait on model availability."
+                )
             }
 
             else -> return featureStatusError(taskName, initialStatus)
@@ -222,7 +216,10 @@ class OnDeviceAiRepositoryImpl @Inject constructor(
                     }
 
                     override fun onDownloadProgress(totalBytesDownloaded: Long) {
-                        Log.d(TAG, "Download progress for $taskName. downloaded=$totalBytesDownloaded")
+                        Log.d(
+                            TAG,
+                            "Download progress for $taskName. downloaded=$totalBytesDownloaded"
+                        )
                     }
 
                     override fun onDownloadCompleted() {

@@ -12,6 +12,8 @@ import com.anix.android.anixstudyassist.aikit.domain.usecase.ExecuteOnlineAiTask
 import com.anix.android.anixstudyassist.aikit.domain.usecase.GetCapabilitiesUseCase
 import com.anix.android.anixstudyassist.aikit.domain.usecase.ParseAiTaskUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +38,8 @@ class AiChatViewModel @Inject constructor(
 
     private val formatter = DateTimeFormatter.ofPattern("hh:mm a")
 
+    private var errorClearJob: Job? = null
+
     private val _uiState = MutableStateFlow(AiChatUiState())
     val uiState: StateFlow<AiChatUiState> = _uiState.asStateFlow()
 
@@ -43,36 +47,86 @@ class AiChatViewModel @Inject constructor(
         _uiState.update { it.copy(inputText = value) }
     }
 
+    private fun setErrorMessage(message: String?) {
+        errorClearJob?.cancel()
+        _uiState.update { it.copy(errorMessage = message) }
+        if (message != null) {
+            errorClearJob = viewModelScope.launch {
+                delay(5000)
+                _uiState.update { it.copy(errorMessage = null) }
+            }
+        }
+    }
+
     fun onSendClicked() {
         val text = _uiState.value.inputText.trim()
         if (text.isBlank() || _uiState.value.isBusy) return
 
-        processInput(text)
+        processInput(text, isVoice = false)
     }
 
     fun onMicClicked() {
-        if (_uiState.value.isListening) {
-            voiceManager.stopListening()
-            _uiState.update { it.copy(isListening = false) }
+        setErrorMessage(null)
+        if (!_uiState.value.isVoiceViewActive) {
+            _uiState.update {
+                it.copy(
+                    isVoiceViewActive = true,
+                    isListening = true,
+                    voiceTranscription = ""
+                )
+            }
+            startVoiceListening()
         } else {
-            _uiState.update { it.copy(isListening = true) }
-            voiceManager.startListening(
-                onResult = { result ->
-                    _uiState.update { it.copy(isListening = false, inputText = result) }
-                    processInput(result)
-                },
-                onError = { error ->
-                    Log.e(TAG, "Voice Error: $error")
-                    _uiState.update { it.copy(isListening = false) }
-                }
-            )
+            if (_uiState.value.isListening) {
+                voiceManager.stopListening()
+                _uiState.update { it.copy(isListening = false) }
+            } else {
+                _uiState.update { it.copy(isListening = true, voiceTranscription = "") }
+                startVoiceListening()
+            }
         }
     }
 
-    private fun processInput(text: String) {
-        Log.d(TAG, "Processing input='$text'")
-        appendMessage(text = text, isFromUser = true)
+    fun onBackToTextView() {
+        setErrorMessage(null)
+        _uiState.update { it.copy(isVoiceViewActive = false, isListening = false) }
+        voiceManager.stopListening()
+    }
+
+    fun onSendVoiceClicked() {
+        val text = _uiState.value.voiceTranscription
+        if (text.isBlank() || _uiState.value.isBusy) return
+
+        processInput(text, isVoice = true)
+        _uiState.update { it.copy(voiceTranscription = "") }
+        setErrorMessage(null)
+    }
+
+    private fun startVoiceListening() {
+        voiceManager.startListening(
+            onResult = { result ->
+                if (_uiState.value.isVoiceViewActive) {
+                    _uiState.update { it.copy(isListening = false, voiceTranscription = result) }
+                    setErrorMessage(null)
+                }
+            },
+            onError = { error ->
+                if (_uiState.value.isVoiceViewActive) {
+                    Log.e(TAG, "Voice Error: $error")
+                    _uiState.update { it.copy(isListening = false) }
+                    setErrorMessage(error)
+                } else {
+                    _uiState.update { it.copy(isListening = false) }
+                }
+            }
+        )
+    }
+
+    private fun processInput(text: String, isVoice: Boolean) {
+        Log.d(TAG, "Processing input='$text', isVoice=$isVoice")
         _uiState.update { it.copy(inputText = "", isBusy = true) }
+        setErrorMessage(null)
+        appendMessage(text = text, isFromUser = true, isVoice = isVoice)
 
         viewModelScope.launch {
             val lowercaseText = text.lowercase(java.util.Locale.ROOT)
@@ -99,21 +153,26 @@ class AiChatViewModel @Inject constructor(
                                     TAG,
                                     "Task failed. reason=${result.reason} details=${result.diagnosticDetails}"
                                 )
-                                buildString {
-                                    append("Error: ${result.reason}")
-                                    result.diagnosticDetails?.takeIf { it.isNotBlank() }?.let {
-                                        append("\n\nDiagnostic details:\n$it")
-                                    }
-                                }
+                                "Error: ${result.reason}"
                             }
                         }
                     }
                 }
             }
 
-            appendMessage(text = reply, isFromUser = false)
-            voiceManager.speak(reply)
-            _uiState.update { it.copy(isBusy = false) }
+            if (reply.startsWith("Error:")) {
+                _uiState.update { it.copy(isBusy = false) }
+                // Only show error if we haven't switched away from the mode that initiated the request
+                if (!isVoice || _uiState.value.isVoiceViewActive) {
+                    setErrorMessage(reply)
+                }
+            } else {
+                appendMessage(text = reply, isFromUser = false, isVoice = isVoice)
+                if (isVoice) {
+                    voiceManager.speak(reply)
+                }
+                _uiState.update { it.copy(isBusy = false) }
+            }
         }
     }
 
@@ -134,11 +193,12 @@ class AiChatViewModel @Inject constructor(
         }.trim()
     }
 
-    private fun appendMessage(text: String, isFromUser: Boolean) {
+    private fun appendMessage(text: String, isFromUser: Boolean, isVoice: Boolean = false) {
         val message = ChatMessage(
             text = text,
             time = LocalTime.now().format(formatter),
-            isFromUser = isFromUser
+            isFromUser = isFromUser,
+            isVoice = isVoice
         )
         _uiState.update { it.copy(messages = it.messages + message) }
     }

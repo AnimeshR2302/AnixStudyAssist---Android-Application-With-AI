@@ -45,6 +45,7 @@ android {
             excludes += "/META-INF/LICENSE"
             excludes += "/META-INF/LICENSE.txt"
             excludes += "/META-INF/NOTICE"
+            excludes += "/META-INF/INDEX.LIST"
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }

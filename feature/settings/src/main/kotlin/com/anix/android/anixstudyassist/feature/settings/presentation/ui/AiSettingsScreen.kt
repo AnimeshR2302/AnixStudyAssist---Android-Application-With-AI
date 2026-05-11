@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -72,7 +73,7 @@ fun AiSettingsScreen(onBackClick: () -> Unit) {
                     icon = Icons.Default.Psychology,
                     title = "AI Model",
                     subtitle = "Choose the AI model",
-                    value = "GPT-4"
+                    value = "Gemini 1.5 Flash"
                 )
             }
             item {
@@ -81,6 +82,14 @@ fun AiSettingsScreen(onBackClick: () -> Unit) {
                     title = "Response Speed",
                     subtitle = "Balance between speed and quality",
                     value = "Balanced"
+                )
+            }
+            item {
+                AiSettingsItem(
+                    icon = Icons.Default.Settings,
+                    title = "API Key",
+                    subtitle = "Gemini API key for online features",
+                    value = "••••••••"
                 )
             }
             item { AiSettingsSectionHeader("LANGUAGE & INPUT") }

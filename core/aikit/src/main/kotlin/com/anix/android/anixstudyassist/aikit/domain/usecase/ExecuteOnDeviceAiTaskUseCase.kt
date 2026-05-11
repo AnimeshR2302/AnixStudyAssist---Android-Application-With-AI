@@ -9,6 +9,6 @@ class ExecuteOnDeviceAiTaskUseCase @Inject constructor(
     private val repository: OnDeviceAiRepository
 ) {
     suspend operator fun invoke(task: AiTask): AiExecutionResult {
-        return repository.execute(task)
+        return repository.executeOnDeviceTask(task)
     }
 }
