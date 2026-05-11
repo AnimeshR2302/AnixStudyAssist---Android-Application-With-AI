@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.anix.android.anixstudyassist.datahandler"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 33
@@ -40,6 +40,6 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     // Retrofit
-    implementation(libs.retrofit)
+    implementation(libs.bundles.networking)
     implementation(libs.okhttp)
 }

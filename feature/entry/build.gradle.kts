@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.anix.android.anixstudyassist.entry"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 33
@@ -47,30 +47,16 @@ dependencies {
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui)
-    implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.bundles.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // Material 3
-    implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
-    implementation(libs.androidx.material3.adaptive.navigation3)
-    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.bundles.material3)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.bundles.navigation3)
 
-    // Retrofit
-    implementation(libs.retrofit)
 
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation(libs.bundles.networking)
 }

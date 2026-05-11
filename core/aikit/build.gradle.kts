@@ -3,14 +3,19 @@ plugins {
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.secretsPlugin)
+//    alias(libs.plugins.google.gms.strict.matcher)
 }
 
 android {
     namespace = "com.anix.android.anixstudyassist.aikit"
-    compileSdk = 36
+    compileSdk = 37
 
     buildFeatures {
         buildConfig = true
+    }
+
+    secrets {
+        defaultPropertiesFileName = "local.properties"
     }
 
     defaultConfig {
@@ -45,17 +50,10 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     // ML Kit GenAI APIs
-    implementation(libs.genai.common)
-    implementation(libs.genai.summarization)
-    implementation(libs.genai.proofreading)
-    implementation(libs.genai.rewriting)
-    implementation(libs.kotlinx.coroutines.guava)
+    implementation(libs.bundles.on.device.ml.kit)
+    implementation(libs.google.genai)
 
-    // Testing
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-
-    implementation(libs.generativeai)
     implementation(libs.guava)
+    implementation(libs.kotlinx.coroutines.guava)
+    implementation(libs.kotlinx.coroutines.jdk8)
 }
