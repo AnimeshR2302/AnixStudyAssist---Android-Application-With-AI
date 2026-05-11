@@ -36,14 +36,23 @@ class OnDeviceAiRepositoryImpl @Inject constructor(private val context: Context)
 
     override suspend fun executeOnDeviceTask(task: AiTask): AiExecutionResult {
         Log.d(TAG, "Executing task=${task.describeForLog()}")
+        val startTime = System.currentTimeMillis()
         return try {
-            when (task) {
+            val result = when (task) {
                 is AiTask.Summarize -> runSummarization(task)
                 is AiTask.Rewrite -> runRewriting(task)
                 is AiTask.Proofread -> runProofreading(task)
             }
+            val duration = System.currentTimeMillis() - startTime
+            Log.d(TAG, "Task ${task.humanLabel()} completed in ${duration}ms")
+            result
         } catch (error: Throwable) {
-            Log.e(TAG, "Unhandled task failure for ${task.describeForLog()}", error)
+            val duration = System.currentTimeMillis() - startTime
+            Log.e(
+                TAG,
+                "Unhandled task failure for ${task.describeForLog()} after ${duration}ms",
+                error
+            )
             AiExecutionResult.Error(
                 reason = "On-device AI execution crashed before completing.",
                 diagnosticDetails = buildDiagnosticDetails(
@@ -182,7 +191,11 @@ class OnDeviceAiRepositoryImpl @Inject constructor(private val context: Context)
 
         return try {
             Log.d(TAG, "Running inference for $taskName")
-            startInference()
+            val inferenceStartTime = System.currentTimeMillis()
+            val result = startInference()
+            val inferenceDuration = System.currentTimeMillis() - inferenceStartTime
+            Log.d(TAG, "Inference for $taskName finished in ${inferenceDuration}ms")
+            result
         } catch (error: Throwable) {
             Log.e(TAG, "Inference failed for $taskName", error)
             AiExecutionResult.Error(

@@ -2,6 +2,7 @@ package com.anix.android.anixstudyassist.aichat.presentation.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
@@ -48,6 +49,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -65,6 +67,8 @@ import com.anix.android.anixstudyassist.aichat.presentation.state.ChatMessage
 import com.anix.android.anixstudyassist.aichat.presentation.viewmodel.AiChatViewModel
 import com.anix.android.anixstudyassist.ui.theme.AnixColors
 
+private const val TAG = "ANIX_AiChatUI"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiChatScreen(
@@ -74,6 +78,10 @@ fun AiChatScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        Log.d(TAG, "AiChatScreen initialized")
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()

@@ -60,6 +60,7 @@ class AiChatViewModel @Inject constructor(
 
     fun onSendClicked() {
         val text = _uiState.value.inputText.trim()
+        Log.d(TAG, "onSendClicked: input='$text'")
         if (text.isBlank() || _uiState.value.isBusy) return
 
         processInput(text, isVoice = false)
@@ -67,7 +68,12 @@ class AiChatViewModel @Inject constructor(
 
     fun onMicClicked() {
         setErrorMessage(null)
-        if (!_uiState.value.isVoiceViewActive) {
+        val isVoiceViewActive = _uiState.value.isVoiceViewActive
+        val isListening = _uiState.value.isListening
+        Log.d(TAG, "onMicClicked: isVoiceViewActive=$isVoiceViewActive, isListening=$isListening")
+
+        if (!isVoiceViewActive) {
+            Log.d(TAG, "onMicClicked: Switching to Voice View and starting listener")
             _uiState.update {
                 it.copy(
                     isVoiceViewActive = true,
@@ -77,10 +83,12 @@ class AiChatViewModel @Inject constructor(
             }
             startVoiceListening()
         } else {
-            if (_uiState.value.isListening) {
+            if (isListening) {
+                Log.d(TAG, "onMicClicked: Stopping listener")
                 voiceManager.stopListening()
                 _uiState.update { it.copy(isListening = false) }
             } else {
+                Log.d(TAG, "onMicClicked: Restarting listener")
                 _uiState.update { it.copy(isListening = true, voiceTranscription = "") }
                 startVoiceListening()
             }
@@ -95,6 +103,7 @@ class AiChatViewModel @Inject constructor(
 
     fun onSendVoiceClicked() {
         val text = _uiState.value.voiceTranscription
+        Log.d(TAG, "onSendVoiceClicked: transcription='$text'")
         if (text.isBlank() || _uiState.value.isBusy) return
 
         processInput(text, isVoice = true)
@@ -123,7 +132,7 @@ class AiChatViewModel @Inject constructor(
     }
 
     private fun processInput(text: String, isVoice: Boolean) {
-        Log.d(TAG, "Processing input='$text', isVoice=$isVoice")
+        Log.d(TAG, "processInput: text='$text', isVoice=$isVoice")
         _uiState.update { it.copy(inputText = "", isBusy = true) }
         setErrorMessage(null)
         appendMessage(text = text, isFromUser = true, isVoice = isVoice)
@@ -131,19 +140,28 @@ class AiChatViewModel @Inject constructor(
         viewModelScope.launch {
             val lowercaseText = text.lowercase(java.util.Locale.ROOT)
             val reply = when {
-                lowercaseText == "hi" -> buildCapabilitiesReply()
+                lowercaseText == "hi" -> {
+                    Log.d(TAG, "processInput: Handled as 'hi' command")
+                    buildCapabilitiesReply()
+                }
                 else -> {
                     val task = parseAiTaskUseCase(text)
                     if (task == null) {
-                        Log.d(TAG, "No on-device task, falling back to Online AI for input='$text'")
+                        Log.d(
+                            TAG,
+                            "processInput: No on-device task, calling ExecuteOnlineAiTaskUseCase"
+                        )
                         executeOnlineAiTaskUseCase(text)
                     } else {
-                        Log.d(TAG, "Dispatching parsed task=$task")
+                        Log.d(
+                            TAG,
+                            "processInput: Task parsed=$task, calling ExecuteOnDeviceAiTaskUseCase"
+                        )
                         when (val result = executeOnDeviceAiTaskUseCase(task)) {
                             is AiExecutionResult.Success -> {
                                 Log.d(
                                     TAG,
-                                    "Task succeeded. label=${result.taskLabel} outputLength=${result.output.length}"
+                                    "processInput: On-device task succeeded. outputLength=${result.output.length}"
                                 )
                                 "Success (${result.taskLabel}):\n${result.output}"
                             }
@@ -151,7 +169,7 @@ class AiChatViewModel @Inject constructor(
                             is AiExecutionResult.Error -> {
                                 Log.e(
                                     TAG,
-                                    "Task failed. reason=${result.reason} details=${result.diagnosticDetails}"
+                                    "processInput: On-device task failed. reason=${result.reason}"
                                 )
                                 "Error: ${result.reason}"
                             }
@@ -160,6 +178,7 @@ class AiChatViewModel @Inject constructor(
                 }
             }
 
+            Log.d(TAG, "processInput: Final reply generated. Length=${reply.length}")
             if (reply.startsWith("Error:")) {
                 _uiState.update { it.copy(isBusy = false) }
                 // Only show error if we haven't switched away from the mode that initiated the request

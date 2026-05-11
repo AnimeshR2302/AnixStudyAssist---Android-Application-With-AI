@@ -1,6 +1,7 @@
 package com.anix.android.anixstudyassist.entry
 
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,8 @@ import com.anix.android.anixstudyassist.entry.viewmodel.EntryViewModel
 import com.anix.android.anixstudyassist.ui.navigation.AuthScreenNavigations
 import kotlinx.coroutines.delay
 
+private const val TAG = "ANIX_Entry"
+
 @Composable
 fun EntryScreen(
     navigations: AuthScreenNavigations,
@@ -36,7 +39,9 @@ fun EntryScreen(
     LaunchedEffect(uiState.loginSuccessUserId, uiState.showSuccessContent) {
         val userId = uiState.loginSuccessUserId
         if (uiState.showSuccessContent && userId != null) {
+            Log.d(TAG, "Login success. UserID: $userId. Starting 5s delay before navigation.")
             delay(5_000)
+            Log.d(TAG, "5s delay finished. Calling onLoginSuccess for $userId.")
             navigations.onLoginSuccess(userId)
             viewModel.onLoginNavigationHandled()
         }

@@ -1,5 +1,6 @@
 package com.anix.landing.anixstudyassist.feature.landing.presentation.ui
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.anix.landing.anixstudyassist.feature.landing.presentation.ui.components.SubjectCard
+
+private const val TAG = "ANIX_Landing"
 
 data class Subject(val name: String, val color: Color)
 
@@ -65,10 +68,16 @@ fun LandingScreen(
                     )
                 },
                 actions = {
-                    TextButton(onClick = onAiModeClick) {
+                    TextButton(onClick = {
+                        Log.d(TAG, "AI MODE button clicked")
+                        onAiModeClick()
+                    }) {
                         Text("AI MODE", color = Color.White, fontWeight = FontWeight.SemiBold)
                     }
-                    IconButton(onClick = onSettingsClick) {
+                    IconButton(onClick = {
+                        Log.d(TAG, "Settings button clicked")
+                        onSettingsClick()
+                    }) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = "Settings",

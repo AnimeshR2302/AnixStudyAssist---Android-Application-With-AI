@@ -14,16 +14,29 @@ import javax.inject.Singleton
 @Singleton
 class OnlineAiRepositoryImpl @Inject constructor() : OnlineAiRepository {
 
+    companion object {
+        private const val TAG = "ANIX_OnlineAi"
+    }
+
     private val apiKey = BuildConfig.GEMINI_API_KEY
     private val client = Client.builder().apiKey(apiKey).build()
     private val modelId = "gemini-2.0-flash"
 
     override suspend fun getConversationalResponse(prompt: String): String {
+        Log.d(TAG, "getConversationalResponse started. Prompt length: ${prompt.length}")
+        val startTime = System.currentTimeMillis()
         return try {
             val response = client.async.models.generateContent(modelId, prompt, null).await()
+            val duration = System.currentTimeMillis() - startTime
+            Log.d(TAG, "getConversationalResponse successful. Duration: ${duration}ms")
             response.text() ?: "I'm sorry, I couldn't generate a response."
         } catch (e: Exception) {
-            Log.e("OnlineAiRepo", "Gemini API Error: ${e.message}", e)
+            val duration = System.currentTimeMillis() - startTime
+            Log.e(
+                TAG,
+                "getConversationalResponse failed after ${duration}ms. Error: ${e.message}",
+                e
+            )
             val message = e.localizedMessage ?: "Unknown error"
             val cleanMessage = when {
                 message.contains("404") || message.contains("not found") ->
@@ -44,15 +57,21 @@ class OnlineAiRepositoryImpl @Inject constructor() : OnlineAiRepository {
     }
 
     override suspend fun getSearchResponse(query: String): String {
+        Log.d(TAG, "getSearchResponse started. Query length: ${query.length}")
+        val startTime = System.currentTimeMillis()
         return try {
             val config = GenerateContentConfig.builder()
                 .tools(listOf(Tool.builder().googleSearch(GoogleSearch.builder().build()).build()))
                 .build()
 
             val response = client.async.models.generateContent(modelId, query, config).await()
+            val duration = System.currentTimeMillis() - startTime
+            Log.d(TAG, "getSearchResponse successful. Duration: ${duration}ms")
             response.text() ?: "I'm sorry, I couldn't generate a response."
         } catch (e: Exception) {
-            Log.e("OnlineAiRepo", "Gemini Search Error: ${e.message}", e)
+            val duration = System.currentTimeMillis() - startTime
+            Log.e(TAG, "getSearchResponse failed after ${duration}ms. Error: ${e.message}", e)
+            Log.d(TAG, "Falling back to basic generation for search query")
             getConversationalResponse(query) // Fallback to basic generation
         }
     }

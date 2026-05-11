@@ -19,7 +19,7 @@ class VoiceManager @Inject constructor(
 ) : RecognitionListener {
 
     companion object {
-        private const val TAG = "VoiceManager"
+        private const val TAG = "ANIX_VoiceManager"
     }
 
     private var speechRecognizer: SpeechRecognizer? = null
@@ -124,14 +124,18 @@ class VoiceManager @Inject constructor(
             SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
             else -> "Unknown error"
         }
+        Log.e(TAG, "onError: $errorMessage ($error)")
         onError?.invoke(errorMessage)
         clearCallbacks()
     }
 
     override fun onResults(results: Bundle?) {
         val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+        Log.d(TAG, "onResults: matchesCount=${matches?.size ?: 0}")
         if (!matches.isNullOrEmpty()) {
-            onResult?.invoke(matches[0])
+            val bestMatch = matches[0]
+            Log.d(TAG, "onResults: bestMatch='$bestMatch'")
+            onResult?.invoke(bestMatch)
         }
         clearCallbacks()
     }

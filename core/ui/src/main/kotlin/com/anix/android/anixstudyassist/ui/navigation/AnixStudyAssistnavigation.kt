@@ -1,5 +1,6 @@
 package com.anix.android.anixstudyassist.ui.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -11,6 +12,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+
+private const val TAG = "ANIX_Nav"
 
 @Composable
 fun AnixStudyAssistNavigation(
@@ -32,10 +35,13 @@ fun AnixStudyAssistNavigation(
     }
     val setStack: () -> Unit = {
         val currentUser = sharedViewModel.currentUser.value
+        Log.d(TAG, "setStack: currentUser=$currentUser, currentStackSize=${backStack.size}")
         backStack.clear()
         if (currentUser.isNullOrBlank()) {
+            Log.d(TAG, "setStack: Navigating to Auth")
             backStack.add(RootGraph.Auth)
         } else {
+            Log.d(TAG, "setStack: Navigating to Main (User=$currentUser)")
             backStack.add(RootGraph.Main(currentUser))
         }
     }
@@ -48,6 +54,7 @@ fun AnixStudyAssistNavigation(
         entry<RootGraph.Auth> {
             authScreen(object : AuthScreenNavigations {
                 override fun onLoginSuccess(userId: String) {
+                    Log.d(TAG, "onLoginSuccess callback received for userId: $userId")
                     sharedViewModel.setCurrentUser(userId)
                     setStack.invoke()
                 }
@@ -57,16 +64,20 @@ fun AnixStudyAssistNavigation(
         entry<RootGraph.Main> { root ->
             landingScreen(root.user, object : LandingScreenNavigations {
                 override fun onOpenClass(classId: String) {
+                    Log.d(TAG, "onOpenClass: $classId")
                     backStack.add(MainGraph.ClassDetails(classId))
                 }
 
                 override val onOpenAiChat: () -> Unit = {
+                    Log.d(TAG, "onOpenAiChat triggered")
                     backStack.add(MainGraph.AiChat)
                 }
                 override val onOpenSettings: () -> Unit = {
+                    Log.d(TAG, "onOpenSettings triggered")
                     backStack.add(MainGraph.Settings)
                 }
                 override val onLogout: () -> Unit = {
+                    Log.d(TAG, "onLogout triggered")
                     sharedViewModel.clearUser()
                     setStack.invoke()
                 }
@@ -89,8 +100,14 @@ fun AnixStudyAssistNavigation(
 
         entry<MainGraph.AiChat> {
             aiChatScreen(
-                { pop.invoke() },
-                { backStack.add(MainGraph.AiSettings) }
+                {
+                    Log.d(TAG, "AiChat back clicked")
+                    pop.invoke()
+                },
+                {
+                    Log.d(TAG, "AiChat settings clicked")
+                    backStack.add(MainGraph.AiSettings)
+                }
             )
         }
 
