@@ -11,7 +11,6 @@ vp-agp = "9.2.1"
 vp-kotlin = "2.3.21"
 vp-ksp = "2.3.5"
 vp-kotlinSerialization = "2.3.21"
-vp-strictVersionMatcher = "1.2.4"
 
 # Compose and Material
 vb-composeBom = "2026.05.00"
@@ -35,8 +34,7 @@ vl-material3AdaptiveNav3 = "1.0.0-alpha03"
 # Hilt
 vl-hilt = "2.59.2"
 
-# Firebase and AI
-vl-firebaseBom = "34.13.0"
+# AI
 vl-googleGenAi = "1.53.0"
 vl-genaiCommon = "1.0.0-beta3"
 vl-genaiSummarization = "1.0.0-beta1"
