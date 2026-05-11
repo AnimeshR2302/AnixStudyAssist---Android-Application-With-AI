@@ -40,7 +40,7 @@ fun rememberAppColors(): AppColors {
         AppColors(
             primary = Color(0xFF6200EE),
             background = Color.White.copy(alpha = 0.45f),
-            surface = Color(0xFF6200EE),
+            surface = Color.White,
             contentSurface = Color.White,
             mainText = Color.Black,
             subText = Color.Gray,

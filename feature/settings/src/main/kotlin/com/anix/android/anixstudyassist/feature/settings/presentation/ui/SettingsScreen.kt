@@ -78,6 +78,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     Icons.Default.Person,
+                    Color.Blue,
                     "Profile",
                     "Manage your profile information",
                     onClick = { onSettingClick("profile") }
@@ -86,6 +87,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     Icons.Default.Notifications,
+                    Color.Yellow,
                     "Notifications",
                     "Configure notification preferences",
                     onClick = { onSettingClick("notifications") }
@@ -95,6 +97,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     Icons.Default.Palette,
+                    Color.Cyan,
                     "Appearance",
                     "Theme and display settings",
                     onClick = { onSettingClick("appearance") }
@@ -104,6 +107,7 @@ fun SettingsScreen(
             item {
                 SettingsItem(
                     Icons.Default.Info,
+                    Color.DarkGray,
                     "About",
                     "App version and information",
                     onClick = { onSettingClick("about") }
@@ -165,6 +169,7 @@ fun SettingsSectionHeader(title: String) {
 @Composable
 fun SettingsItem(
     icon: ImageVector,
+    color: Color,
     title: String,
     subtitle: String,
     onClick: () -> Unit
@@ -178,7 +183,7 @@ fun SettingsItem(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, tint = Color.Gray)
+        Icon(icon, contentDescription = null, tint = color)
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(

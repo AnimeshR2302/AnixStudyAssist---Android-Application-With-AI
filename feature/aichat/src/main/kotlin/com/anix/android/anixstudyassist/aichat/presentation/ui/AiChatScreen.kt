@@ -181,15 +181,17 @@ private fun ChatInput(
                 placeholder = {
                     Text(
                         "Type your message...",
-                        color = colors.mainText,
+                        color = colors.subText,
                         fontSize = 14.sp
                     )
                 },
                 modifier = Modifier.weight(1f),
                 enabled = !isBusy,
                 colors = TextFieldDefaults.colors(
+                    focusedTextColor = colors.mainText,
+                    unfocusedTextColor = colors.mainText,
                     focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
+                    unfocusedContainerColor = Color(0xBFF5F5F5),
                     disabledContainerColor = Color(0xFFF5F5F5),
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
