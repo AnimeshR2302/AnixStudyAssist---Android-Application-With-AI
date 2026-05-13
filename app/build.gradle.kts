@@ -29,9 +29,8 @@ android {
             )
         }
         debug {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles()
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
     compileOptions {

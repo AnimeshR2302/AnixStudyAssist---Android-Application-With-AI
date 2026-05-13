@@ -1,10 +1,29 @@
 package com.anix.android.anixstudyassist.aichat.presentation.state
 
+import com.anix.android.anixstudyassist.aikit.domain.model.RewriteTone
+
 data class ChatMessage(
     val text: String,
     val time: String,
     val isFromUser: Boolean,
     val isVoice: Boolean = false
+)
+
+enum class TextChatCapability {
+    SUMMARIZE,
+    PROOFREAD,
+    REWRITE
+}
+
+data class TextChatCapabilityOption(
+    val capability: TextChatCapability,
+    val title: String,
+    val description: String
+)
+
+data class PendingRewriteSelection(
+    val sourceText: String,
+    val toneOptions: List<RewriteTone>
 )
 
 data class AiChatUiState(
@@ -16,9 +35,12 @@ data class AiChatUiState(
     val showRetryButton: Boolean = false,
     val lastProcessedText: String = "",
     val errorMessage: String? = null,
+    val availableCapabilities: List<TextChatCapabilityOption> = emptyList(),
+    val selectedCapability: TextChatCapability? = null,
+    val pendingRewriteSelection: PendingRewriteSelection? = null,
     val messages: List<ChatMessage> = listOf(
         ChatMessage(
-            text = "Hello! I'm AnixAI. Send 'hi' to see what I can do on-device.",
+            text = "Hello! I'm AnixAI. Use the + button to pick an on-device capability, or send a normal message.",
             time = "Now",
             isFromUser = false
         )

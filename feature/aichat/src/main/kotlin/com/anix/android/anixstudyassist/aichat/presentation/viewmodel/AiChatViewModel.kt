@@ -5,8 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anix.android.anixstudyassist.aichat.presentation.state.AiChatUiState
 import com.anix.android.anixstudyassist.aichat.presentation.state.ChatMessage
+import com.anix.android.anixstudyassist.aichat.presentation.state.PendingRewriteSelection
+import com.anix.android.anixstudyassist.aichat.presentation.state.TextChatCapability
+import com.anix.android.anixstudyassist.aichat.presentation.state.TextChatCapabilityOption
 import com.anix.android.anixstudyassist.aichat.presentation.voice.VoiceManager
+import com.anix.android.anixstudyassist.aikit.domain.model.AiCapability
 import com.anix.android.anixstudyassist.aikit.domain.model.AiExecutionResult
+import com.anix.android.anixstudyassist.aikit.domain.model.AiTask
+import com.anix.android.anixstudyassist.aikit.domain.model.RewriteTone
 import com.anix.android.anixstudyassist.aikit.domain.usecase.ExecuteOnDeviceAiTaskUseCase
 import com.anix.android.anixstudyassist.aikit.domain.usecase.ExecuteOnlineAiTaskUseCase
 import com.anix.android.anixstudyassist.aikit.domain.usecase.GetCapabilitiesUseCase
@@ -22,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -39,13 +46,40 @@ class AiChatViewModel @Inject constructor(
 
     private val formatter = DateTimeFormatter.ofPattern("hh:mm a")
 
+    /** TODO: Assumption - rewrite tone menu order is fixed to match numeric reply parsing. */
+    private val rewriteToneOptions = listOf(
+        RewriteTone.FRIENDLY,
+        RewriteTone.PROFESSIONAL,
+        RewriteTone.SHORTEN,
+        RewriteTone.REPHRASE,
+        RewriteTone.ELABORATE,
+        RewriteTone.EMOJIFY
+    )
+
     private var errorClearJob: Job? = null
 
     private val _uiState = MutableStateFlow(AiChatUiState())
     val uiState: StateFlow<AiChatUiState> = _uiState.asStateFlow()
 
+    init {
+        _uiState.update {
+            it.copy(availableCapabilities = getCapabilitiesUseCase().mapNotNull(::mapCapabilityOption))
+        }
+    }
+
     fun onInputChanged(value: String) {
         _uiState.update { it.copy(inputText = value) }
+    }
+
+    fun onCapabilitySelected(capability: TextChatCapability) {
+        if (_uiState.value.isBusy || _uiState.value.pendingRewriteSelection != null) return
+        setErrorMessage(null)
+        _uiState.update { it.copy(selectedCapability = capability) }
+    }
+
+    fun onCapabilityCleared() {
+        if (_uiState.value.isBusy || _uiState.value.pendingRewriteSelection != null) return
+        _uiState.update { it.copy(selectedCapability = null) }
     }
 
     private fun setErrorMessage(message: String?) {
@@ -64,7 +98,12 @@ class AiChatViewModel @Inject constructor(
         Log.d(TAG, "onSendClicked: input='$text'")
         if (text.isBlank() || _uiState.value.isBusy) return
 
-        processInput(text, isVoice = false)
+        val pendingRewriteSelection = _uiState.value.pendingRewriteSelection
+        if (pendingRewriteSelection != null) {
+            handleRewriteToneSelection(text, pendingRewriteSelection)
+        } else {
+            handleTextChatInput(text)
+        }
     }
 
     fun onMicClicked() {
@@ -114,20 +153,19 @@ class AiChatViewModel @Inject constructor(
         Log.d(TAG, "onSendVoiceClicked: transcription='$text'")
         if (text.isBlank() || _uiState.value.isBusy) return
 
-        processInput(text, isVoice = true)
+        processVoiceInput(text, isVoice = true)
         _uiState.update { it.copy(voiceTranscription = "", showRetryButton = false) }
         setErrorMessage(null)
     }
 
     fun onRetryClicked() {
         val lastText = _uiState.value.lastProcessedText
-        val isVoice =
-            _uiState.value.isVoiceViewActive // If voice view is active, assume it was a voice task
+        val isVoice = _uiState.value.isVoiceViewActive
         Log.d(TAG, "onRetryClicked: retrying text='$lastText', isVoice=$isVoice")
         if (lastText.isBlank()) return
 
         _uiState.update { it.copy(showRetryButton = false) }
-        processInput(lastText, isVoice = isVoice, isRetry = true)
+        processVoiceInput(lastText, isVoice = isVoice, isRetry = true)
     }
 
     private fun startVoiceListening() {
@@ -136,7 +174,6 @@ class AiChatViewModel @Inject constructor(
                 if (_uiState.value.isVoiceViewActive) {
                     _uiState.update { it.copy(isListening = false, voiceTranscription = result) }
                     setErrorMessage(null)
-                    // Auto-send if transcription is not empty
                     if (result.isNotBlank()) {
                         onSendVoiceClicked()
                     }
@@ -154,8 +191,104 @@ class AiChatViewModel @Inject constructor(
         )
     }
 
-    private fun processInput(text: String, isVoice: Boolean, isRetry: Boolean = false) {
-        Log.d(TAG, "processInput: text='$text', isVoice=$isVoice, isRetry=$isRetry")
+    private fun handleTextChatInput(text: String) {
+        val selectedCapability = _uiState.value.selectedCapability
+        Log.d(TAG, "handleTextChatInput: selectedCapability=$selectedCapability text='$text'")
+
+        _uiState.update {
+            it.copy(
+                inputText = "",
+                isBusy = true,
+                lastProcessedText = text,
+                showRetryButton = false,
+                selectedCapability = null
+            )
+        }
+        setErrorMessage(null)
+        appendMessage(text = text, isFromUser = true)
+
+        when (selectedCapability) {
+            null -> {
+                /** TODO: Future - replace placeholder normal chat response with actual conversational AI flow. */
+                appendMessage(
+                    text = "Normal chat response is not implemented yet.",
+                    isFromUser = false
+                )
+                _uiState.update { it.copy(isBusy = false) }
+            }
+
+            TextChatCapability.SUMMARIZE -> executeTextTask(AiTask.Summarize(text))
+            TextChatCapability.PROOFREAD -> executeTextTask(AiTask.Proofread(text))
+            TextChatCapability.REWRITE -> {
+                val pendingRewriteSelection = PendingRewriteSelection(
+                    sourceText = text,
+                    toneOptions = rewriteToneOptions
+                )
+                /** TODO: Future - refine assistant prompt copy once final chat UX is defined. */
+                appendMessage(
+                    text = buildRewriteTonePrompt(rewriteToneOptions),
+                    isFromUser = false
+                )
+                _uiState.update {
+                    it.copy(
+                        isBusy = false,
+                        pendingRewriteSelection = pendingRewriteSelection
+                    )
+                }
+            }
+        }
+    }
+
+    private fun handleRewriteToneSelection(
+        selection: String,
+        pendingRewriteSelection: PendingRewriteSelection
+    ) {
+        Log.d(TAG, "handleRewriteToneSelection: selection='$selection'")
+        _uiState.update {
+            it.copy(
+                inputText = "",
+                isBusy = true,
+                showRetryButton = false
+            )
+        }
+        setErrorMessage(null)
+        appendMessage(text = selection, isFromUser = true)
+
+        val selectedTone = parseRewriteToneSelection(selection, pendingRewriteSelection.toneOptions)
+        if (selectedTone == null) {
+            appendMessage(
+                text = "Please reply with a valid rewrite option number or tone name.",
+                isFromUser = false
+            )
+            _uiState.update { it.copy(isBusy = false) }
+            return
+        }
+
+        _uiState.update { it.copy(pendingRewriteSelection = null) }
+        executeTextTask(AiTask.Rewrite(pendingRewriteSelection.sourceText, selectedTone))
+    }
+
+    private fun executeTextTask(task: AiTask) {
+        viewModelScope.launch {
+            when (val result = executeOnDeviceAiTaskUseCase(task)) {
+                is AiExecutionResult.Success -> {
+                    appendMessage(
+                        text = "Success (${result.taskLabel}):\n${result.output}",
+                        isFromUser = false
+                    )
+                    _uiState.update { it.copy(isBusy = false) }
+                }
+
+                is AiExecutionResult.Error -> {
+                    _uiState.update { it.copy(isBusy = false) }
+                    setErrorMessage("Error: ${result.reason}")
+                }
+            }
+        }
+    }
+
+    private fun processVoiceInput(text: String, isVoice: Boolean, isRetry: Boolean = false) {
+        Log.d(TAG, "processVoiceInput: text='$text', isVoice=$isVoice, isRetry=$isRetry")
         _uiState.update {
             it.copy(
                 inputText = "",
@@ -170,11 +303,11 @@ class AiChatViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            val lowercaseText = text.lowercase(java.util.Locale.ROOT)
+            val lowercaseText = text.lowercase(Locale.ROOT)
             val reply = withTimeoutOrNull(5000) {
                 when (lowercaseText) {
                     "hi" -> {
-                        Log.d(TAG, "processInput: Handled as 'hi' command")
+                        Log.d(TAG, "processVoiceInput: Handled as 'hi' command")
                         buildCapabilitiesReply()
                     }
 
@@ -183,19 +316,19 @@ class AiChatViewModel @Inject constructor(
                         if (task == null) {
                             Log.d(
                                 TAG,
-                                "processInput: No on-device task, calling ExecuteOnlineAiTaskUseCase"
+                                "processVoiceInput: No on-device task, calling ExecuteOnlineAiTaskUseCase"
                             )
                             executeOnlineAiTaskUseCase(text)
                         } else {
                             Log.d(
                                 TAG,
-                                "processInput: Task parsed=$task, calling ExecuteOnDeviceAiTaskUseCase"
+                                "processVoiceInput: Task parsed=$task, calling ExecuteOnDeviceAiTaskUseCase"
                             )
                             when (val result = executeOnDeviceAiTaskUseCase(task)) {
                                 is AiExecutionResult.Success -> {
                                     Log.d(
                                         TAG,
-                                        "processInput: On-device task succeeded. outputLength=${result.output.length}"
+                                        "processVoiceInput: On-device task succeeded. outputLength=${result.output.length}"
                                     )
                                     "Success (${result.taskLabel}):\n${result.output}"
                                 }
@@ -203,7 +336,7 @@ class AiChatViewModel @Inject constructor(
                                 is AiExecutionResult.Error -> {
                                     Log.e(
                                         TAG,
-                                        "processInput: On-device task failed. reason=${result.reason}"
+                                        "processVoiceInput: On-device task failed. reason=${result.reason}"
                                     )
                                     "Error: ${result.reason}"
                                 }
@@ -214,16 +347,15 @@ class AiChatViewModel @Inject constructor(
             }
 
             if (reply == null) {
-                Log.w(TAG, "processInput: Task timed out after 5 seconds")
+                Log.w(TAG, "processVoiceInput: Task timed out after 5 seconds")
                 _uiState.update { it.copy(showRetryButton = true, isBusy = false) }
                 setErrorMessage("Request timed out. You can retry using the button below.")
                 return@launch
             }
 
-            Log.d(TAG, "processInput: Final reply generated. Length=${reply.length}")
+            Log.d(TAG, "processVoiceInput: Final reply generated. Length=${reply.length}")
             if (reply.startsWith("Error:")) {
                 _uiState.update { it.copy(isBusy = false) }
-                // Only show error if we haven't switched away from the mode that initiated the request
                 if (!isVoice || _uiState.value.isVoiceViewActive) {
                     setErrorMessage(reply)
                 }
@@ -254,6 +386,33 @@ class AiChatViewModel @Inject constructor(
         }.trim()
     }
 
+    private fun buildRewriteTonePrompt(toneOptions: List<RewriteTone>): String {
+        val lines = toneOptions.mapIndexed { index, tone ->
+            "${index + 1}. ${tone.displayName()}"
+        }
+
+        return buildString {
+            appendLine("Which rewrite type would you like to use?")
+            lines.forEach { appendLine(it) }
+            append("Reply with the number or tone name.")
+        }
+    }
+
+    private fun parseRewriteToneSelection(
+        selection: String,
+        toneOptions: List<RewriteTone>
+    ): RewriteTone? {
+        val trimmedSelection = selection.trim()
+        val selectedIndex = trimmedSelection.toIntOrNull()
+        if (selectedIndex != null) {
+            return toneOptions.getOrNull(selectedIndex - 1)
+        }
+
+        return toneOptions.firstOrNull { tone ->
+            tone.displayName().equals(trimmedSelection, ignoreCase = true)
+        }
+    }
+
     private fun appendMessage(text: String, isFromUser: Boolean, isVoice: Boolean = false) {
         val message = ChatMessage(
             text = text,
@@ -262,5 +421,42 @@ class AiChatViewModel @Inject constructor(
             isVoice = isVoice
         )
         _uiState.update { it.copy(messages = it.messages + message) }
+    }
+
+    /** TODO: Future - replace string-based capability mapping with stable capability identifiers. */
+    private fun mapCapabilityOption(capability: AiCapability): TextChatCapabilityOption? {
+        val command = capability.command.lowercase(Locale.ROOT)
+        return when {
+            command.startsWith("summarize") -> TextChatCapabilityOption(
+                capability = TextChatCapability.SUMMARIZE,
+                title = "Summarize",
+                description = capability.description
+            )
+
+            command.startsWith("proofread") -> TextChatCapabilityOption(
+                capability = TextChatCapability.PROOFREAD,
+                title = "Proofread",
+                description = capability.description
+            )
+
+            command.startsWith("rewrite") -> TextChatCapabilityOption(
+                capability = TextChatCapability.REWRITE,
+                title = "Rewrite",
+                description = capability.description
+            )
+
+            else -> null
+        }
+    }
+
+    private fun RewriteTone.displayName(): String {
+        val lowercaseName = name.lowercase(Locale.ROOT)
+        return lowercaseName.replaceFirstChar { firstCharacter ->
+            if (firstCharacter.isLowerCase()) {
+                firstCharacter.titlecase(Locale.ROOT)
+            } else {
+                firstCharacter.toString()
+            }
+        }
     }
 }

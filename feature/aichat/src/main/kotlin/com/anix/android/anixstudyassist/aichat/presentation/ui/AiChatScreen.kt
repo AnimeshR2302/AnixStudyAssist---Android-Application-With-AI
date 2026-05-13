@@ -32,11 +32,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -44,6 +48,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -52,6 +57,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -63,7 +71,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.anix.android.anixstudyassist.aichat.presentation.state.AiChatUiState
 import com.anix.android.anixstudyassist.aichat.presentation.state.ChatMessage
+import com.anix.android.anixstudyassist.aichat.presentation.state.TextChatCapability
+import com.anix.android.anixstudyassist.aichat.presentation.state.TextChatCapabilityOption
 import com.anix.android.anixstudyassist.aichat.presentation.viewmodel.AiChatViewModel
 import com.anix.android.anixstudyassist.ui.theme.AnixColors
 
@@ -169,7 +180,9 @@ fun AiChatScreen(
                 state = state,
                 onInputChanged = viewModel::onInputChanged,
                 onSendClicked = viewModel::onSendClicked,
-                onMicClicked = onMicClickAction
+                onMicClicked = onMicClickAction,
+                onCapabilitySelected = viewModel::onCapabilitySelected,
+                onCapabilityCleared = viewModel::onCapabilityCleared
             )
         }
     }
@@ -178,11 +191,15 @@ fun AiChatScreen(
 @Composable
 private fun TextChatView(
     modifier: Modifier = Modifier,
-    state: com.anix.android.anixstudyassist.aichat.presentation.state.AiChatUiState,
+    state: AiChatUiState,
     onInputChanged: (String) -> Unit,
     onSendClicked: () -> Unit,
-    onMicClicked: () -> Unit
+    onMicClicked: () -> Unit,
+    onCapabilitySelected: (TextChatCapability) -> Unit,
+    onCapabilityCleared: () -> Unit
 ) {
+    var isCapabilityMenuExpanded by remember { mutableStateOf(false) }
+
     Column(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
@@ -215,6 +232,32 @@ private fun TextChatView(
             }
         }
 
+        SelectedCapabilityBanner(
+            selectedCapability = state.selectedCapability,
+            isAwaitingRewriteTone = state.pendingRewriteSelection != null,
+            onClearSelection = onCapabilityCleared
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            CapabilityPicker(
+                capabilities = state.availableCapabilities,
+                enabled = !state.isBusy && state.pendingRewriteSelection == null,
+                expanded = isCapabilityMenuExpanded,
+                onExpandedChange = { isCapabilityMenuExpanded = it },
+                onCapabilitySelected = { capability ->
+                    onCapabilitySelected(capability)
+                    isCapabilityMenuExpanded = false
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         ChatInput(
             value = state.inputText,
             isBusy = state.isBusy,
@@ -227,9 +270,109 @@ private fun TextChatView(
 }
 
 @Composable
+private fun SelectedCapabilityBanner(
+    selectedCapability: TextChatCapability?,
+    isAwaitingRewriteTone: Boolean,
+    onClearSelection: () -> Unit
+) {
+    val colors = AnixColors.current
+    val label = when {
+        isAwaitingRewriteTone -> "Awaiting rewrite type selection"
+        selectedCapability == null -> null
+        else -> "Selected: ${selectedCapability.displayName()}"
+    }
+
+    if (label == null) return
+
+    Surface(
+        color = colors.primary.copy(alpha = 0.08f),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                color = colors.primary,
+                modifier = Modifier.weight(1f),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            )
+
+            if (!isAwaitingRewriteTone && selectedCapability != null) {
+                TextButton(onClick = onClearSelection) {
+                    Text("Clear")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CapabilityPicker(
+    capabilities: List<TextChatCapabilityOption>,
+    enabled: Boolean,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onCapabilitySelected: (TextChatCapability) -> Unit
+) {
+    Box {
+        IconButton(
+            onClick = { onExpandedChange(!expanded) },
+            enabled = enabled,
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = Color(0xFF6200EE),
+                contentColor = Color.White,
+                disabledContainerColor = Color(0xFFB39DDB),
+                disabledContentColor = Color.White
+            ),
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Show capabilities"
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) }
+        ) {
+            capabilities.forEachIndexed { index, capability ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(
+                                text = capability.title,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = capability.description,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    onClick = { onCapabilitySelected(capability.capability) }
+                )
+                if (index != capabilities.lastIndex) {
+                    HorizontalDivider()
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun VoiceChatView(
     modifier: Modifier = Modifier,
-    state: com.anix.android.anixstudyassist.aichat.presentation.state.AiChatUiState,
+    state: AiChatUiState,
     onMicClick: () -> Unit,
     onSendVoiceClick: () -> Unit,
     onRetryClick: () -> Unit,
@@ -355,7 +498,7 @@ private fun VoiceChatView(
                         onClick = onRetryClick,
                         modifier = Modifier.size(60.dp),
                         colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = Color(0xFFFFA000), // Amber color for retry
+                            containerColor = Color(0xFFFFA000),
                             contentColor = Color.White
                         )
                     ) {
@@ -563,4 +706,10 @@ private fun ChatInput(
             }
         }
     }
+}
+
+private fun TextChatCapability.displayName(): String = when (this) {
+    TextChatCapability.SUMMARIZE -> "Summarize"
+    TextChatCapability.PROOFREAD -> "Proofread"
+    TextChatCapability.REWRITE -> "Rewrite"
 }
