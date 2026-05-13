@@ -1,9 +1,10 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.secretsPlugin)
-//    alias(libs.plugins.google.gms.strict.matcher)
 }
 
 android {
@@ -23,6 +24,17 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+
+        buildConfigField(
+            "String", "GEMINI_API_KEY",
+            localProperties.getProperty("MY_API_KEY") ?: ""
+        )
     }
 
     buildTypes {

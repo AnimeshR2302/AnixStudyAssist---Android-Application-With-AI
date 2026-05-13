@@ -160,6 +160,7 @@ fun AiChatScreen(
                 state = state,
                 onMicClick = onMicClickAction,
                 onSendVoiceClick = viewModel::onSendVoiceClicked,
+                onRetryClick = viewModel::onRetryClicked,
                 onBackClick = viewModel::onBackToTextView
             )
         } else {
@@ -231,6 +232,7 @@ private fun VoiceChatView(
     state: com.anix.android.anixstudyassist.aichat.presentation.state.AiChatUiState,
     onMicClick: () -> Unit,
     onSendVoiceClick: () -> Unit,
+    onRetryClick: () -> Unit,
     onBackClick: () -> Unit
 ) {
     val colors = AnixColors.current
@@ -333,9 +335,11 @@ private fun VoiceChatView(
                 IconButton(
                     onClick = onMicClick,
                     modifier = Modifier.size(80.dp),
+                    enabled = !state.isBusy,
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = if (state.isListening) Color.Red else Color(0xFF6200EE),
-                        contentColor = Color.White
+                        contentColor = Color.White,
+                        disabledContainerColor = Color.Gray
                     )
                 ) {
                     Icon(
@@ -345,7 +349,23 @@ private fun VoiceChatView(
                     )
                 }
 
-                if (state.voiceTranscription.isNotEmpty() && !state.isBusy) {
+                if (state.showRetryButton) {
+                    Spacer(modifier = Modifier.width(16.dp))
+                    IconButton(
+                        onClick = onRetryClick,
+                        modifier = Modifier.size(60.dp),
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = Color(0xFFFFA000), // Amber color for retry
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "Retry",
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+                } else if (state.voiceTranscription.isNotEmpty() && !state.isBusy) {
                     Spacer(modifier = Modifier.width(16.dp))
                     IconButton(
                         onClick = onSendVoiceClick,

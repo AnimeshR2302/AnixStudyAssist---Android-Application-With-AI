@@ -13,6 +13,8 @@ data class AiChatUiState(
     val isBusy: Boolean = false,
     val isListening: Boolean = false,
     val isVoiceViewActive: Boolean = false,
+    val showRetryButton: Boolean = false,
+    val lastProcessedText: String = "",
     val errorMessage: String? = null,
     val messages: List<ChatMessage> = listOf(
         ChatMessage(

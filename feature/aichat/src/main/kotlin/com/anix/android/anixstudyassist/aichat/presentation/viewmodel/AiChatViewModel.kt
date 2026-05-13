@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -78,7 +79,8 @@ class AiChatViewModel @Inject constructor(
                 it.copy(
                     isVoiceViewActive = true,
                     isListening = true,
-                    voiceTranscription = ""
+                    voiceTranscription = "",
+                    showRetryButton = false
                 )
             }
             startVoiceListening()
@@ -89,7 +91,13 @@ class AiChatViewModel @Inject constructor(
                 _uiState.update { it.copy(isListening = false) }
             } else {
                 Log.d(TAG, "onMicClicked: Restarting listener")
-                _uiState.update { it.copy(isListening = true, voiceTranscription = "") }
+                _uiState.update {
+                    it.copy(
+                        isListening = true,
+                        voiceTranscription = "",
+                        showRetryButton = false
+                    )
+                }
                 startVoiceListening()
             }
         }
@@ -107,8 +115,19 @@ class AiChatViewModel @Inject constructor(
         if (text.isBlank() || _uiState.value.isBusy) return
 
         processInput(text, isVoice = true)
-        _uiState.update { it.copy(voiceTranscription = "") }
+        _uiState.update { it.copy(voiceTranscription = "", showRetryButton = false) }
         setErrorMessage(null)
+    }
+
+    fun onRetryClicked() {
+        val lastText = _uiState.value.lastProcessedText
+        val isVoice =
+            _uiState.value.isVoiceViewActive // If voice view is active, assume it was a voice task
+        Log.d(TAG, "onRetryClicked: retrying text='$lastText', isVoice=$isVoice")
+        if (lastText.isBlank()) return
+
+        _uiState.update { it.copy(showRetryButton = false) }
+        processInput(lastText, isVoice = isVoice, isRetry = true)
     }
 
     private fun startVoiceListening() {
@@ -117,6 +136,10 @@ class AiChatViewModel @Inject constructor(
                 if (_uiState.value.isVoiceViewActive) {
                     _uiState.update { it.copy(isListening = false, voiceTranscription = result) }
                     setErrorMessage(null)
+                    // Auto-send if transcription is not empty
+                    if (result.isNotBlank()) {
+                        onSendVoiceClicked()
+                    }
                 }
             },
             onError = { error ->
@@ -131,51 +154,70 @@ class AiChatViewModel @Inject constructor(
         )
     }
 
-    private fun processInput(text: String, isVoice: Boolean) {
-        Log.d(TAG, "processInput: text='$text', isVoice=$isVoice")
-        _uiState.update { it.copy(inputText = "", isBusy = true) }
+    private fun processInput(text: String, isVoice: Boolean, isRetry: Boolean = false) {
+        Log.d(TAG, "processInput: text='$text', isVoice=$isVoice, isRetry=$isRetry")
+        _uiState.update {
+            it.copy(
+                inputText = "",
+                isBusy = true,
+                lastProcessedText = text,
+                showRetryButton = false
+            )
+        }
         setErrorMessage(null)
-        appendMessage(text = text, isFromUser = true, isVoice = isVoice)
+        if (!isRetry) {
+            appendMessage(text = text, isFromUser = true, isVoice = isVoice)
+        }
 
         viewModelScope.launch {
             val lowercaseText = text.lowercase(java.util.Locale.ROOT)
-            val reply = when {
-                lowercaseText == "hi" -> {
-                    Log.d(TAG, "processInput: Handled as 'hi' command")
-                    buildCapabilitiesReply()
-                }
-                else -> {
-                    val task = parseAiTaskUseCase(text)
-                    if (task == null) {
-                        Log.d(
-                            TAG,
-                            "processInput: No on-device task, calling ExecuteOnlineAiTaskUseCase"
-                        )
-                        executeOnlineAiTaskUseCase(text)
-                    } else {
-                        Log.d(
-                            TAG,
-                            "processInput: Task parsed=$task, calling ExecuteOnDeviceAiTaskUseCase"
-                        )
-                        when (val result = executeOnDeviceAiTaskUseCase(task)) {
-                            is AiExecutionResult.Success -> {
-                                Log.d(
-                                    TAG,
-                                    "processInput: On-device task succeeded. outputLength=${result.output.length}"
-                                )
-                                "Success (${result.taskLabel}):\n${result.output}"
-                            }
+            val reply = withTimeoutOrNull(5000) {
+                when (lowercaseText) {
+                    "hi" -> {
+                        Log.d(TAG, "processInput: Handled as 'hi' command")
+                        buildCapabilitiesReply()
+                    }
 
-                            is AiExecutionResult.Error -> {
-                                Log.e(
-                                    TAG,
-                                    "processInput: On-device task failed. reason=${result.reason}"
-                                )
-                                "Error: ${result.reason}"
+                    else -> {
+                        val task = parseAiTaskUseCase(text)
+                        if (task == null) {
+                            Log.d(
+                                TAG,
+                                "processInput: No on-device task, calling ExecuteOnlineAiTaskUseCase"
+                            )
+                            executeOnlineAiTaskUseCase(text)
+                        } else {
+                            Log.d(
+                                TAG,
+                                "processInput: Task parsed=$task, calling ExecuteOnDeviceAiTaskUseCase"
+                            )
+                            when (val result = executeOnDeviceAiTaskUseCase(task)) {
+                                is AiExecutionResult.Success -> {
+                                    Log.d(
+                                        TAG,
+                                        "processInput: On-device task succeeded. outputLength=${result.output.length}"
+                                    )
+                                    "Success (${result.taskLabel}):\n${result.output}"
+                                }
+
+                                is AiExecutionResult.Error -> {
+                                    Log.e(
+                                        TAG,
+                                        "processInput: On-device task failed. reason=${result.reason}"
+                                    )
+                                    "Error: ${result.reason}"
+                                }
                             }
                         }
                     }
                 }
+            }
+
+            if (reply == null) {
+                Log.w(TAG, "processInput: Task timed out after 5 seconds")
+                _uiState.update { it.copy(showRetryButton = true, isBusy = false) }
+                setErrorMessage("Request timed out. You can retry using the button below.")
+                return@launch
             }
 
             Log.d(TAG, "processInput: Final reply generated. Length=${reply.length}")
