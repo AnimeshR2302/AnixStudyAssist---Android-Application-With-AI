@@ -162,34 +162,33 @@ class OnDeviceAiRepositoryImpl @Inject constructor(private val context: Context)
         client: Any,
         startInference: suspend () -> AiExecutionResult
     ): AiExecutionResult {
-        val initialStatus = checkFeatureStatus(taskName, client)
-        when (initialStatus) {
-            FeatureStatus.AVAILABLE -> {
-                Log.d(TAG, "Feature ready for $taskName. Starting inference.")
-            }
-
-            FeatureStatus.DOWNLOADABLE -> {
-                Log.d(TAG, "Feature downloadable for $taskName. Starting download.")
-                val downloadResult = downloadFeature(taskName, client)
-                if (downloadResult != null) return downloadResult
-
-                val postDownloadStatus = checkFeatureStatus(taskName, client)
-                if (postDownloadStatus != FeatureStatus.AVAILABLE) {
-                    return featureStatusError(taskName, postDownloadStatus)
-                }
-            }
-
-            FeatureStatus.DOWNLOADING -> {
-                Log.d(
-                    TAG,
-                    "Feature already downloading for $taskName. Inference request will wait on model availability."
-                )
-            }
-
-            else -> return featureStatusError(taskName, initialStatus)
-        }
-
         return try {
+            when (val initialStatus = checkFeatureStatus(taskName, client)) {
+                FeatureStatus.AVAILABLE -> {
+                    Log.d(TAG, "Feature ready for $taskName. Starting inference.")
+                }
+
+                FeatureStatus.DOWNLOADABLE -> {
+                    Log.d(TAG, "Feature downloadable for $taskName. Starting download.")
+                    val downloadResult = downloadFeature(taskName, client)
+                    if (downloadResult != null) return downloadResult
+
+                    val postDownloadStatus = checkFeatureStatus(taskName, client)
+                    if (postDownloadStatus != FeatureStatus.AVAILABLE) {
+                        return featureStatusError(taskName, postDownloadStatus)
+                    }
+                }
+
+                FeatureStatus.DOWNLOADING -> {
+                    Log.d(
+                        TAG,
+                        "Feature already downloading for $taskName. Inference request will wait on model availability."
+                    )
+                }
+
+                else -> return featureStatusError(taskName, initialStatus)
+            }
+
             Log.d(TAG, "Running inference for $taskName")
             val inferenceStartTime = System.currentTimeMillis()
             val result = startInference()
@@ -197,12 +196,17 @@ class OnDeviceAiRepositoryImpl @Inject constructor(private val context: Context)
             Log.d(TAG, "Inference for $taskName finished in ${inferenceDuration}ms")
             result
         } catch (error: Throwable) {
-            Log.e(TAG, "Inference failed for $taskName", error)
+            Log.e(TAG, "Task execution failed for $taskName", error)
+            val errorCode = (error as? GenAiException)?.errorCode
+            val reason = when (errorCode) {
+                606 -> "The specific AI capability for $taskName was not found on this device (Error 606). This usually means the required on-device model feature is not available or AICore needs an update."
+                else -> "$taskName failed during execution."
+            }
             AiExecutionResult.Error(
-                reason = "$taskName failed during inference.",
+                reason = reason,
                 diagnosticDetails = buildDiagnosticDetails(
                     taskName = taskName,
-                    status = initialStatus,
+                    status = null,
                     detail = "${error::class.java.simpleName}: ${error.message ?: "No message"}"
                 )
             )
