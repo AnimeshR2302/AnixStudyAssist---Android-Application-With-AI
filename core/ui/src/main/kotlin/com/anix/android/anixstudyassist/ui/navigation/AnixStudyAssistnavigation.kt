@@ -2,6 +2,7 @@ package com.anix.android.anixstudyassist.ui.navigation
 
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -18,7 +19,6 @@ private const val TAG = "ANIX_Nav"
 @Composable
 fun AnixStudyAssistNavigation(
     modifier: Modifier = Modifier,
-    // Shared ViewModel scoped to the Navigation Host
     sharedViewModel: SharedViewModel = hiltViewModel(LocalViewModelStoreOwner.current!!, null),
     authScreen: @Composable (AuthScreenNavigations) -> Unit,
     landingScreen: @Composable (String, LandingScreenNavigations) -> Unit,
@@ -28,7 +28,15 @@ fun AnixStudyAssistNavigation(
     aiSettingsScreen: @Composable (() -> Unit) -> Unit,
     dataStoreScreen: @Composable (() -> Unit) -> Unit
 ) {
-    val backStack: NavBackStack<NavKey> = rememberNavBackStack(RootGraph.Auth)
+    val initialRoute = remember {
+        val user = sharedViewModel.currentUser.value
+        if (user != null) {
+            RootGraph.Main(user)
+        } else {
+            RootGraph.Auth
+        }
+    }
+    val backStack: NavBackStack<NavKey> = rememberNavBackStack(initialRoute)
     val pop: () -> Unit = {
         if (backStack.size > 1) {
             backStack.removeAt(backStack.lastIndex)

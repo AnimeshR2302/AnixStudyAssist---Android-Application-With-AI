@@ -50,6 +50,7 @@ vl-kotlinxCoroutinesJdk8 = "1.11.0"
 vl-kotlinxCoroutinesGuava = "1.11.0"
 vl-kotlinxSerializationCore = "1.11.0"
 vl-material = "1.14.0"
+vl-work = "2.10.0"
 vl-secrets = "2.0.1"
 junit = "4.13.2"
 junitVersion = "1.3.0"
@@ -113,6 +114,7 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "vl-work" }
 
 [bundles]
 compose = [

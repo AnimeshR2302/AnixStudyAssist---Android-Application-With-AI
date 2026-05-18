@@ -59,4 +59,7 @@ dependencies {
     implementation(libs.bundles.navigation3)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.kotlinx.serialization.core)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
 }

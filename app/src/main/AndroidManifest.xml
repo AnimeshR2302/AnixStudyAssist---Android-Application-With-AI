@@ -3,6 +3,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".AnixStudyAssistApplication"
@@ -25,6 +26,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name="com.anix.android.anixstudyassist.ui.navigation.SessionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.anix.android.ACTION_EXTEND_SESSION" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

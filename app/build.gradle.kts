@@ -82,4 +82,7 @@ dependencies {
 
     // Navigation 3
     implementation(libs.bundles.navigation3)
+
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
 }
