@@ -28,6 +28,9 @@ sealed interface MainGraph : NavKey {
 
     @Serializable
     data object Settings : MainGraph
+
+    @Serializable
+    data object DataStore : MainGraph
 }
 
 @Serializable

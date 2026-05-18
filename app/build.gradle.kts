@@ -65,6 +65,7 @@ dependencies {
     implementation(project(":feature:landing"))
     implementation(project(":feature:topic"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:data-store"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

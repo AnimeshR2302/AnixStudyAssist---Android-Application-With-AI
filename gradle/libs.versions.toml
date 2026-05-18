@@ -51,6 +51,9 @@ vl-kotlinxCoroutinesGuava = "1.11.0"
 vl-kotlinxSerializationCore = "1.11.0"
 vl-material = "1.13.0"
 vl-secrets = "2.0.1"
+junit = "4.13.2"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
 
 [libraries]
 # AndroidX
@@ -105,6 +108,9 @@ guava = { module = "com.google.guava:guava", version.ref = "vl-guava" }
 kotlinx-coroutines-jdk8 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "vl-kotlinxCoroutinesJdk8" }
 kotlinx-coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "vl-kotlinxCoroutinesGuava" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "vl-kotlinxSerializationCore" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
 [bundles]
 compose = [

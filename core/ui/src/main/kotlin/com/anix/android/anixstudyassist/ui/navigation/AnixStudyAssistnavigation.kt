@@ -25,7 +25,8 @@ fun AnixStudyAssistNavigation(
     classDetailsScreen: @Composable (String, ClassDetailsScreenNavigations) -> Unit,
     settingsScreen: @Composable (SettingsScreenNavigations) -> Unit,
     aiChatScreen: @Composable (() -> Unit, () -> Unit) -> Unit,
-    aiSettingsScreen: @Composable (() -> Unit) -> Unit
+    aiSettingsScreen: @Composable (() -> Unit) -> Unit,
+    dataStoreScreen: @Composable (() -> Unit) -> Unit
 ) {
     val backStack: NavBackStack<NavKey> = rememberNavBackStack(RootGraph.Auth)
     val pop: () -> Unit = {
@@ -75,6 +76,14 @@ fun AnixStudyAssistNavigation(
                 override val onOpenSettings: () -> Unit = {
                     Log.d(TAG, "onOpenSettings triggered")
                     backStack.add(MainGraph.Settings)
+                }
+                override val onOpenDataStore: () -> Unit = {
+                    Log.d(TAG, "onOpenDataStore triggered")
+                    backStack.add(MainGraph.DataStore)
+                }
+                override val onOpenAddTopic: () -> Unit = {
+                    Log.d(TAG, "onOpenAddTopic triggered")
+                    backStack.add(MainGraph.ClassDetails("new-topic"))
                 }
                 override val onLogout: () -> Unit = {
                     Log.d(TAG, "onLogout triggered")
@@ -127,6 +136,10 @@ fun AnixStudyAssistNavigation(
                     setStack.invoke()
                 }
             })
+        }
+
+        entry<MainGraph.DataStore> {
+            dataStoreScreen { pop.invoke() }
         }
     }
 

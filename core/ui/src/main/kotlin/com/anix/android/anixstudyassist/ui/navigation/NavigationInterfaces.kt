@@ -8,6 +8,8 @@ interface LandingScreenNavigations {
     fun onOpenClass(classId: String)
     val onOpenAiChat: () -> Unit
     val onOpenSettings: () -> Unit
+    val onOpenDataStore: () -> Unit
+    val onOpenAddTopic: () -> Unit
     val onLogout: () -> Unit
 }
 

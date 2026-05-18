@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.anix.android.anixstudyassist.aichat.presentation.ui.AiChatScreen
 import com.anix.android.anixstudyassist.entry.EntryScreen
+import com.anix.android.anixstudyassist.feature.datastore.presentation.ui.DataStoreScreen
 import com.anix.android.anixstudyassist.feature.settings.presentation.ui.AiSettingsScreen
 import com.anix.android.anixstudyassist.feature.settings.presentation.ui.SettingsScreen
 import com.anix.android.anixstudyassist.topic.ui.TopicScreen
@@ -43,7 +44,8 @@ fun AnixStudyAssistApp() {
                     onSubjectClick = navigations::onOpenClass,
                     onAiModeClick = navigations.onOpenAiChat,
                     onSettingsClick = navigations.onOpenSettings,
-                    onAddClick = {}
+                    onDataStoreClick = navigations.onOpenDataStore,
+                    onAddClick = navigations.onOpenAddTopic
                 )
             },
             classDetailsScreen = { classId, navigations ->
@@ -65,6 +67,9 @@ fun AnixStudyAssistApp() {
             },
             aiSettingsScreen = { onBackClick ->
                 AiSettingsScreen(onBackClick = onBackClick)
+            },
+            dataStoreScreen = { onBackClick ->
+                DataStoreScreen(onBackClick = onBackClick)
             }
         )
     }
