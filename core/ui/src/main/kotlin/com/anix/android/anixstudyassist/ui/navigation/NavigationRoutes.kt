@@ -21,6 +21,9 @@ sealed interface MainGraph : NavKey {
     data class ClassDetails(val classId: String) : MainGraph
 
     @Serializable
+    data class TopicCreation(val parentTopicId: String? = null) : MainGraph
+
+    @Serializable
     data object AiChat : MainGraph
 
     @Serializable

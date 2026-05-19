@@ -1,6 +1,7 @@
 package com.anix.android.anixstudyassist.topic.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,7 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,31 +34,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.anix.android.anixstudyassist.topic.ui.components.ChapterItem
-
-data class Chapter(val title: String, val progress: Float, val isCompleted: Boolean)
+import com.anix.android.anixstudyassist.topic.viewmodel.TopicViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopicScreen(
-    subjectName: String,
+    topicId: String,
     onBackClick: () -> Unit,
-    onMenuClick: () -> Unit
+    onAddSubTopicClick: () -> Unit,
+    viewModel: TopicViewModel = hiltViewModel()
 ) {
-    val chapters = listOf(
-        Chapter("Introduction and Fundamentals", 1.0f, true),
-        Chapter("Chapter 1: Core Concepts", 1.0f, true),
-        Chapter("Chapter 2: Advanced Topics", 0.6f, false),
-        Chapter("Chapter 3: Practical Applications", 0.3f, false),
-        Chapter("Chapter 4: Problem Solving", 0.0f, false),
-        Chapter("Chapter 5: Review and Practice", 0.0f, false)
-    )
+    val topicState by viewModel.getTopic(topicId).collectAsState()
+    val topic = topicState
+
+    val chapters = topic?.subTopics ?: emptyList()
+    val overallProgress = if (chapters.isEmpty()) 0f else chapters.sumOf { it.progress.toDouble() }
+        .toFloat() / chapters.size
 
     Scaffold(
         containerColor = Color(0xFFF3F4F6),
         topBar = {
             TopAppBar(
-                title = { Text(subjectName, color = Color.White, fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        topic?.name ?: "Topic",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -66,10 +74,10 @@ fun TopicScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onMenuClick) {
+                    IconButton(onClick = onAddSubTopicClick) {
                         Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = "More",
+                            Icons.Default.Add,
+                            contentDescription = "Add Sub-topic",
                             tint = Color.White
                         )
                     }
@@ -78,22 +86,39 @@ fun TopicScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            item {
-                OverallProgressHeader(progress = 0.48f)
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-            items(chapters) { chapter ->
-                ChapterItem(
-                    title = chapter.title,
-                    progress = chapter.progress,
-                    isCompleted = chapter.isCompleted
+        if (chapters.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Its a great time to study today. Start a sub-topic",
+                    color = Color.Gray,
+                    modifier = Modifier.padding(32.dp),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp
                 )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                item {
+                    OverallProgressHeader(progress = overallProgress)
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+                items(chapters) { chapter ->
+                    ChapterItem(
+                        title = chapter.title,
+                        progress = chapter.progress,
+                        isCompleted = chapter.isCompleted
+                    )
+                }
             }
         }
     }
@@ -114,7 +139,7 @@ fun OverallProgressHeader(progress: Float) {
                 color = Color.Black
             )
             Text(
-                text = "${(progress * 100).toInt()}%",
+                text = if (progress == 0f) "no progress" else "${(progress * 100).toInt()}%",
                 fontSize = 14.sp,
                 color = Color(0xFF6200EE),
                 fontWeight = FontWeight.Bold
@@ -136,5 +161,5 @@ fun OverallProgressHeader(progress: Float) {
 @Preview(showBackground = true)
 @Composable
 fun TopicScreenPreview() {
-    TopicScreen(subjectName = "Subject", onBackClick = {}, onMenuClick = {})
+    // Preview
 }

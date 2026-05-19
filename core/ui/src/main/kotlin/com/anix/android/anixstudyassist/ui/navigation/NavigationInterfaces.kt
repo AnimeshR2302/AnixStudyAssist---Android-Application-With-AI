@@ -9,13 +9,14 @@ interface LandingScreenNavigations {
     val onOpenAiChat: () -> Unit
     val onOpenSettings: () -> Unit
     val onOpenDataStore: () -> Unit
-    val onOpenAddTopic: () -> Unit
+    fun onOpenAddTopic(parentTopicId: String? = null)
     val onLogout: () -> Unit
 }
 
 interface ClassDetailsScreenNavigations {
     val onBack: () -> Unit
     fun onOpenSettings(classId: String)
+    fun onOpenAddSubTopic(topicId: String)
     val onLogout: () -> Unit
 }
 

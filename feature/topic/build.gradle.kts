@@ -37,6 +37,8 @@ android {
 
 dependencies {
 
+    implementation(project(":core:ui"))
+    implementation(project(":core:data-handler"))
     implementation(libs.androidx.core.ktx)
 
     // Hilt

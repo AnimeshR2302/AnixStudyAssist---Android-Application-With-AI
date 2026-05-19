@@ -12,6 +12,7 @@ import com.anix.android.anixstudyassist.entry.EntryScreen
 import com.anix.android.anixstudyassist.feature.datastore.presentation.ui.DataStoreScreen
 import com.anix.android.anixstudyassist.feature.settings.presentation.ui.AiSettingsScreen
 import com.anix.android.anixstudyassist.feature.settings.presentation.ui.SettingsScreen
+import com.anix.android.anixstudyassist.topic.ui.TopicCreationScreen
 import com.anix.android.anixstudyassist.topic.ui.TopicScreen
 import com.anix.android.anixstudyassist.ui.navigation.AnixStudyAssistNavigation
 import com.anix.android.anixstudyassist.ui.theme.AnixStudyAssistTheme
@@ -45,14 +46,14 @@ fun AnixStudyAssistApp() {
                     onAiModeClick = navigations.onOpenAiChat,
                     onSettingsClick = navigations.onOpenSettings,
                     onDataStoreClick = navigations.onOpenDataStore,
-                    onAddClick = navigations.onOpenAddTopic
+                    onAddClick = navigations::onOpenAddTopic
                 )
             },
             classDetailsScreen = { classId, navigations ->
                 TopicScreen(
-                    subjectName = classId.toReadableSubjectName(),
+                    topicId = classId,
                     onBackClick = navigations.onBack,
-                    onMenuClick = { navigations.onOpenSettings(classId) }
+                    onAddSubTopicClick = { navigations.onOpenAddSubTopic(classId) }
                 )
             },
             settingsScreen = { navigations ->
@@ -65,6 +66,9 @@ fun AnixStudyAssistApp() {
             aiChatScreen = { onBackClick, onSettingsClick ->
                 AiChatScreen(onBackClick = onBackClick, onSettingsClick = onSettingsClick)
             },
+            topicCreationScreen = { parentTopicId, onBack ->
+                TopicCreationScreen(parentTopicId = parentTopicId, onBack = onBack)
+            },
             aiSettingsScreen = { onBackClick ->
                 AiSettingsScreen(onBackClick = onBackClick)
             },
@@ -73,13 +77,4 @@ fun AnixStudyAssistApp() {
             }
         )
     }
-}
-
-private fun String.toReadableSubjectName(): String {
-    return split('-', '_')
-        .filter { it.isNotBlank() }
-        .joinToString(" ") { part ->
-            part.lowercase().replaceFirstChar { it.uppercase() }
-        }
-        .ifBlank { this }
 }
