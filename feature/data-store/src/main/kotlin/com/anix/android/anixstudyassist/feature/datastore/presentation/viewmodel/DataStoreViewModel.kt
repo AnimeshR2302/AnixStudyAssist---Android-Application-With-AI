@@ -29,12 +29,21 @@ class DataStoreViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DataStoreUiState())
     val uiState: StateFlow<DataStoreUiState> = _uiState.asStateFlow()
 
-    private val storageDir = File(application.filesDir, "data_store")
+    private val appFilesDir = application.filesDir
+    private var activeTopicId: String? = null
+    private var storageDir = File(appFilesDir, APP_DATA_STORE_DIR)
 
     init {
-        if (!storageDir.exists()) {
-            storageDir.mkdirs()
-        }
+        ensureStorageDir()
+        refreshState()
+    }
+
+    fun setStoreScope(topicId: String?) {
+        if (activeTopicId == topicId) return
+
+        activeTopicId = topicId
+        storageDir = getStorageDir(topicId)
+        ensureStorageDir()
         refreshState()
     }
 
@@ -97,5 +106,28 @@ class DataStoreViewModel @Inject constructor(
         storageDir.listFiles()?.forEach { it.delete() }
         refreshState()
 
+    }
+
+    private fun getStorageDir(topicId: String?): File {
+        return if (topicId == null) {
+            File(appFilesDir, APP_DATA_STORE_DIR)
+        } else {
+            File(File(appFilesDir, TOPIC_DATA_STORE_DIR), sanitizeTopicId(topicId))
+        }
+    }
+
+    private fun ensureStorageDir() {
+        if (!storageDir.exists()) {
+            storageDir.mkdirs()
+        }
+    }
+
+    private fun sanitizeTopicId(topicId: String): String {
+        return topicId.replace(Regex("[^A-Za-z0-9._-]"), "_")
+    }
+
+    private companion object {
+        const val APP_DATA_STORE_DIR = "data_store"
+        const val TOPIC_DATA_STORE_DIR = "topic_data_store"
     }
 }

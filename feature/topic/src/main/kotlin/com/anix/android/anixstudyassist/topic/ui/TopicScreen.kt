@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,6 +45,7 @@ fun TopicScreen(
     topicId: String,
     onBackClick: () -> Unit,
     onAddSubTopicClick: () -> Unit,
+    onAddDataToStoreClick: () -> Unit,
     viewModel: TopicViewModel = hiltViewModel()
 ) {
     val topicState by viewModel.getTopic(topicId).collectAsState()
@@ -86,38 +88,49 @@ fun TopicScreen(
             )
         }
     ) { paddingValues ->
-        if (chapters.isEmpty()) {
-            Box(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            ElevatedButton(
+                onClick = onAddDataToStoreClick,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                Text(
-                    "Its a great time to study today. Start a sub-topic",
-                    color = Color.Gray,
-                    modifier = Modifier.padding(32.dp),
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp
-                )
+                Text("Add Data To Store")
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                item {
-                    OverallProgressHeader(progress = overallProgress)
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
-                items(chapters) { chapter ->
-                    ChapterItem(
-                        title = chapter.title,
-                        progress = chapter.progress,
-                        isCompleted = chapter.isCompleted
+
+            if (chapters.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Its a great time to study today. Start a sub-topic",
+                        color = Color.Gray,
+                        modifier = Modifier.padding(32.dp),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    item {
+                        OverallProgressHeader(progress = overallProgress)
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                    items(chapters) { chapter ->
+                        ChapterItem(
+                            title = chapter.title,
+                            progress = chapter.progress,
+                            isCompleted = chapter.isCompleted
+                        )
+                    }
                 }
             }
         }

@@ -33,7 +33,7 @@ sealed interface MainGraph : NavKey {
     data object Settings : MainGraph
 
     @Serializable
-    data object DataStore : MainGraph
+    data class DataStore(val topicId: String? = null) : MainGraph
 }
 
 @Serializable

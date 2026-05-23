@@ -53,7 +53,8 @@ fun AnixStudyAssistApp() {
                 TopicScreen(
                     topicId = classId,
                     onBackClick = navigations.onBack,
-                    onAddSubTopicClick = { navigations.onOpenAddSubTopic(classId) }
+                    onAddSubTopicClick = { navigations.onOpenAddSubTopic(classId) },
+                    onAddDataToStoreClick = { navigations.onOpenDataStore(classId) }
                 )
             },
             settingsScreen = { navigations ->
@@ -72,8 +73,8 @@ fun AnixStudyAssistApp() {
             aiSettingsScreen = { onBackClick ->
                 AiSettingsScreen(onBackClick = onBackClick)
             },
-            dataStoreScreen = { onBackClick ->
-                DataStoreScreen(onBackClick = onBackClick)
+            dataStoreScreen = { topicId, onBackClick ->
+                DataStoreScreen(topicId = topicId, onBackClick = onBackClick)
             }
         )
     }

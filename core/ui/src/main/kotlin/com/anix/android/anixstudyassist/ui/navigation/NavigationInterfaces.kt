@@ -17,6 +17,7 @@ interface ClassDetailsScreenNavigations {
     val onBack: () -> Unit
     fun onOpenSettings(classId: String)
     fun onOpenAddSubTopic(topicId: String)
+    fun onOpenDataStore(topicId: String)
     val onLogout: () -> Unit
 }
 

@@ -27,7 +27,7 @@ fun AnixStudyAssistNavigation(
     aiChatScreen: @Composable (() -> Unit, () -> Unit) -> Unit,
     topicCreationScreen: @Composable (String?, () -> Unit) -> Unit,
     aiSettingsScreen: @Composable (() -> Unit) -> Unit,
-    dataStoreScreen: @Composable (() -> Unit) -> Unit
+    dataStoreScreen: @Composable (String?, () -> Unit) -> Unit
 ) {
     val initialRoute = remember {
         val user = sharedViewModel.currentUser.value
@@ -88,7 +88,7 @@ fun AnixStudyAssistNavigation(
                 }
                 override val onOpenDataStore: () -> Unit = {
                     Log.d(TAG, "onOpenDataStore triggered")
-                    backStack.add(MainGraph.DataStore)
+                    backStack.add(MainGraph.DataStore())
                 }
                 override fun onOpenAddTopic(parentTopicId: String?) {
                     Log.d(TAG, "onOpenAddTopic triggered: parentTopicId=$parentTopicId")
@@ -110,6 +110,9 @@ fun AnixStudyAssistNavigation(
                 }
                 override fun onOpenAddSubTopic(topicId: String) {
                     backStack.add(MainGraph.TopicCreation(topicId))
+                }
+                override fun onOpenDataStore(topicId: String) {
+                    backStack.add(MainGraph.DataStore(topicId))
                 }
 
                 override val onLogout: () -> Unit = {
@@ -150,8 +153,8 @@ fun AnixStudyAssistNavigation(
             })
         }
 
-        entry<MainGraph.DataStore> {
-            dataStoreScreen { pop.invoke() }
+        entry<MainGraph.DataStore> { dataStore ->
+            dataStoreScreen(dataStore.topicId) { pop.invoke() }
         }
 
         entry<MainGraph.TopicCreation> { creation ->
