@@ -21,11 +21,6 @@ data class TextChatCapabilityOption(
     val description: String
 )
 
-data class PendingRewriteSelection(
-    val sourceText: String,
-    val toneOptions: List<RewriteTone>
-)
-
 data class AiChatUiState(
     val inputText: String = "",
     val voiceTranscription: String = "",
@@ -36,8 +31,9 @@ data class AiChatUiState(
     val lastProcessedText: String = "",
     val errorMessage: String? = null,
     val availableCapabilities: List<TextChatCapabilityOption> = emptyList(),
+    val rewriteToneOptions: List<RewriteTone> = emptyList(),
     val selectedCapability: TextChatCapability? = null,
-    val pendingRewriteSelection: PendingRewriteSelection? = null,
+    val selectedRewriteTone: RewriteTone? = null,
     val messages: List<ChatMessage> = listOf(
         ChatMessage(
             text = "Hello! I'm AnixAI. Use the + button to pick an on-device capability, or send a normal message.",

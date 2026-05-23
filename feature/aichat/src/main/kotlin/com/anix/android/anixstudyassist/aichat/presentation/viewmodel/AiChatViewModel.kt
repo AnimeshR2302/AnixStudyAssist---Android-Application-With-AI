@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anix.android.anixstudyassist.aichat.presentation.state.AiChatUiState
 import com.anix.android.anixstudyassist.aichat.presentation.state.ChatMessage
-import com.anix.android.anixstudyassist.aichat.presentation.state.PendingRewriteSelection
 import com.anix.android.anixstudyassist.aichat.presentation.state.TextChatCapability
 import com.anix.android.anixstudyassist.aichat.presentation.state.TextChatCapabilityOption
 import com.anix.android.anixstudyassist.aichat.presentation.voice.VoiceManager
@@ -68,7 +67,10 @@ class AiChatViewModel @Inject constructor(
 
     init {
         _uiState.update {
-            it.copy(availableCapabilities = getCapabilitiesUseCase().mapNotNull(::mapCapabilityOption))
+            it.copy(
+                availableCapabilities = getCapabilitiesUseCase().mapNotNull(::mapCapabilityOption),
+                rewriteToneOptions = rewriteToneOptions
+            )
         }
     }
 
@@ -77,14 +79,29 @@ class AiChatViewModel @Inject constructor(
     }
 
     fun onCapabilitySelected(capability: TextChatCapability) {
-        if (_uiState.value.isBusy || _uiState.value.pendingRewriteSelection != null) return
+        if (_uiState.value.isBusy) return
         setErrorMessage(null)
-        _uiState.update { it.copy(selectedCapability = capability) }
+        _uiState.update {
+            it.copy(
+                selectedCapability = capability,
+                selectedRewriteTone = null
+            )
+        }
+    }
+
+    fun onRewriteToneSelected(tone: RewriteTone) {
+        if (_uiState.value.isBusy) return
+        _uiState.update { it.copy(selectedRewriteTone = tone) }
     }
 
     fun onCapabilityCleared() {
-        if (_uiState.value.isBusy || _uiState.value.pendingRewriteSelection != null) return
-        _uiState.update { it.copy(selectedCapability = null) }
+        if (_uiState.value.isBusy) return
+        _uiState.update {
+            it.copy(
+                selectedCapability = null,
+                selectedRewriteTone = null
+            )
+        }
     }
 
     private fun setErrorMessage(message: String?) {
@@ -103,12 +120,7 @@ class AiChatViewModel @Inject constructor(
         Log.d(TAG, "onSendClicked: input='$text'")
         if (text.isBlank() || _uiState.value.isBusy) return
 
-        val pendingRewriteSelection = _uiState.value.pendingRewriteSelection
-        if (pendingRewriteSelection != null) {
-            handleRewriteToneSelection(text, pendingRewriteSelection)
-        } else {
-            handleTextChatInput(text)
-        }
+        handleTextChatInput(text)
     }
 
     fun onMicClicked() {
@@ -198,7 +210,11 @@ class AiChatViewModel @Inject constructor(
 
     private fun handleTextChatInput(text: String) {
         val selectedCapability = _uiState.value.selectedCapability
-        Log.d(TAG, "handleTextChatInput: selectedCapability=$selectedCapability text='$text'")
+        val selectedTone = _uiState.value.selectedRewriteTone
+        Log.d(
+            TAG,
+            "handleTextChatInput: selectedCapability=$selectedCapability selectedTone=$selectedTone text='$text'"
+        )
 
         _uiState.update {
             it.copy(
@@ -206,7 +222,8 @@ class AiChatViewModel @Inject constructor(
                 isBusy = true,
                 lastProcessedText = text,
                 showRetryButton = false,
-                selectedCapability = null
+                selectedCapability = null,
+                selectedRewriteTone = null
             )
         }
         setErrorMessage(null)
@@ -225,52 +242,15 @@ class AiChatViewModel @Inject constructor(
             TextChatCapability.SUMMARIZE -> executeTextTask(AiTask.Summarize(text))
             TextChatCapability.PROOFREAD -> executeTextTask(AiTask.Proofread(text))
             TextChatCapability.REWRITE -> {
-                val pendingRewriteSelection = PendingRewriteSelection(
-                    sourceText = text,
-                    toneOptions = rewriteToneOptions
-                )
-                /** TODO: Future - refine assistant prompt copy once final chat UX is defined. */
-                appendMessage(
-                    text = buildRewriteTonePrompt(rewriteToneOptions),
-                    isFromUser = false
-                )
-                _uiState.update {
-                    it.copy(
-                        isBusy = false,
-                        pendingRewriteSelection = pendingRewriteSelection
-                    )
+                if (selectedTone != null) {
+                    executeTextTask(AiTask.Rewrite(text, selectedTone))
+                } else {
+                    // This case should ideally be blocked by UI (input disabled)
+                    setErrorMessage("Please select a rewrite tone first.")
+                    _uiState.update { it.copy(isBusy = false) }
                 }
             }
         }
-    }
-
-    private fun handleRewriteToneSelection(
-        selection: String,
-        pendingRewriteSelection: PendingRewriteSelection
-    ) {
-        Log.d(TAG, "handleRewriteToneSelection: selection='$selection'")
-        _uiState.update {
-            it.copy(
-                inputText = "",
-                isBusy = true,
-                showRetryButton = false
-            )
-        }
-        setErrorMessage(null)
-        appendMessage(text = selection, isFromUser = true)
-
-        val selectedTone = parseRewriteToneSelection(selection, pendingRewriteSelection.toneOptions)
-        if (selectedTone == null) {
-            appendMessage(
-                text = "Please reply with a valid rewrite option number or tone name.",
-                isFromUser = false
-            )
-            _uiState.update { it.copy(isBusy = false) }
-            return
-        }
-
-        _uiState.update { it.copy(pendingRewriteSelection = null) }
-        executeTextTask(AiTask.Rewrite(pendingRewriteSelection.sourceText, selectedTone))
     }
 
     private fun executeTextTask(task: AiTask) {
@@ -434,33 +414,6 @@ class AiChatViewModel @Inject constructor(
 
             is AiTask.Rewrite ->
                 "Rewrite the following text in a ${task.tone.displayName()} style:\n\n${task.text}"
-        }
-    }
-
-    private fun buildRewriteTonePrompt(toneOptions: List<RewriteTone>): String {
-        val lines = toneOptions.mapIndexed { index, tone ->
-            "${index + 1}. ${tone.displayName()}"
-        }
-
-        return buildString {
-            appendLine("Which rewrite type would you like to use?")
-            lines.forEach { appendLine(it) }
-            append("Reply with the number or tone name.")
-        }
-    }
-
-    private fun parseRewriteToneSelection(
-        selection: String,
-        toneOptions: List<RewriteTone>
-    ): RewriteTone? {
-        val trimmedSelection = selection.trim()
-        val selectedIndex = trimmedSelection.toIntOrNull()
-        if (selectedIndex != null) {
-            return toneOptions.getOrNull(selectedIndex - 1)
-        }
-
-        return toneOptions.firstOrNull { tone ->
-            tone.displayName().equals(trimmedSelection, ignoreCase = true)
         }
     }
 

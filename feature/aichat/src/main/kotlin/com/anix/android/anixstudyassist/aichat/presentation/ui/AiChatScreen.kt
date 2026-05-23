@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +37,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -76,6 +79,7 @@ import com.anix.android.anixstudyassist.aichat.presentation.state.ChatMessage
 import com.anix.android.anixstudyassist.aichat.presentation.state.TextChatCapability
 import com.anix.android.anixstudyassist.aichat.presentation.state.TextChatCapabilityOption
 import com.anix.android.anixstudyassist.aichat.presentation.viewmodel.AiChatViewModel
+import com.anix.android.anixstudyassist.aikit.domain.model.RewriteTone
 import com.anix.android.anixstudyassist.ui.theme.AnixColors
 
 private const val TAG = "ANIX_AiChatUI"
@@ -182,7 +186,8 @@ fun AiChatScreen(
                 onSendClicked = viewModel::onSendClicked,
                 onMicClicked = onMicClickAction,
                 onCapabilitySelected = viewModel::onCapabilitySelected,
-                onCapabilityCleared = viewModel::onCapabilityCleared
+                onCapabilityCleared = viewModel::onCapabilityCleared,
+                onRewriteToneSelected = viewModel::onRewriteToneSelected
             )
         }
     }
@@ -196,9 +201,15 @@ private fun TextChatView(
     onSendClicked: () -> Unit,
     onMicClicked: () -> Unit,
     onCapabilitySelected: (TextChatCapability) -> Unit,
-    onCapabilityCleared: () -> Unit
+    onCapabilityCleared: () -> Unit,
+    onRewriteToneSelected: (RewriteTone) -> Unit
 ) {
     var isCapabilityMenuExpanded by remember { mutableStateOf(false) }
+
+    val isInputEnabled = !state.isBusy && (
+            state.selectedCapability != TextChatCapability.REWRITE ||
+                    state.selectedRewriteTone != null
+            )
 
     Column(modifier = modifier.fillMaxSize()) {
         LazyColumn(
@@ -234,8 +245,10 @@ private fun TextChatView(
 
         SelectedCapabilityBanner(
             selectedCapability = state.selectedCapability,
-            isAwaitingRewriteTone = state.pendingRewriteSelection != null,
-            onClearSelection = onCapabilityCleared
+            selectedTone = state.selectedRewriteTone,
+            toneOptions = state.rewriteToneOptions,
+            onClearSelection = onCapabilityCleared,
+            onToneSelected = onRewriteToneSelected
         )
 
         Box(
@@ -246,7 +259,7 @@ private fun TextChatView(
         ) {
             CapabilityPicker(
                 capabilities = state.availableCapabilities,
-                enabled = !state.isBusy && state.pendingRewriteSelection == null,
+                enabled = !state.isBusy,
                 expanded = isCapabilityMenuExpanded,
                 onExpandedChange = { isCapabilityMenuExpanded = it },
                 onCapabilitySelected = { capability ->
@@ -260,7 +273,7 @@ private fun TextChatView(
 
         ChatInput(
             value = state.inputText,
-            isBusy = state.isBusy,
+            isBusy = !isInputEnabled,
             isListening = state.isListening,
             onValueChange = onInputChanged,
             onSendClick = onSendClicked,
@@ -272,17 +285,19 @@ private fun TextChatView(
 @Composable
 private fun SelectedCapabilityBanner(
     selectedCapability: TextChatCapability?,
-    isAwaitingRewriteTone: Boolean,
-    onClearSelection: () -> Unit
+    selectedTone: RewriteTone?,
+    toneOptions: List<RewriteTone>,
+    onClearSelection: () -> Unit,
+    onToneSelected: (RewriteTone) -> Unit
 ) {
     val colors = AnixColors.current
-    val label = when {
-        isAwaitingRewriteTone -> "Awaiting rewrite type selection"
-        selectedCapability == null -> null
-        else -> "Selected: ${selectedCapability.displayName()}"
-    }
+    if (selectedCapability == null) return
 
-    if (label == null) return
+    val label = if (selectedCapability == TextChatCapability.REWRITE && selectedTone != null) {
+        "Selected: Rewrite (${selectedTone.name.lowercase().capitalizeFirstLetter()})"
+    } else {
+        "Selected: ${selectedCapability.displayName()}"
+    }
 
     Surface(
         color = colors.primary.copy(alpha = 0.08f),
@@ -291,28 +306,63 @@ private fun SelectedCapabilityBanner(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
-            Text(
-                text = label,
-                color = colors.primary,
-                modifier = Modifier.weight(1f),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = label,
+                    color = colors.primary,
+                    modifier = Modifier.weight(1f),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
 
-            if (!isAwaitingRewriteTone && selectedCapability != null) {
                 TextButton(onClick = onClearSelection) {
                     Text("Clear")
+                }
+            }
+
+            if (selectedCapability == TextChatCapability.REWRITE && selectedTone == null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Select a tone to continue:",
+                    fontSize = 12.sp,
+                    color = colors.subText,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 4.dp)
+                ) {
+                    items(toneOptions) { tone ->
+                        AssistChip(
+                            onClick = { onToneSelected(tone) },
+                            label = { Text(tone.name.lowercase().capitalizeFirstLetter()) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                labelColor = colors.primary,
+                                containerColor = Color.White
+                            ),
+                            border = AssistChipDefaults.assistChipBorder(
+                                borderColor = colors.primary.copy(alpha = 0.3f),
+                                enabled = true
+                            )
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+private fun String.capitalizeFirstLetter(): String =
+    this.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.ROOT) else it.toString() }
 
 @Composable
 private fun CapabilityPicker(

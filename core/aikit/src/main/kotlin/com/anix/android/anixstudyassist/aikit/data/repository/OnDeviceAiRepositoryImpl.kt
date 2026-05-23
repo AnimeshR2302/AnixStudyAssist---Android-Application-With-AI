@@ -200,6 +200,8 @@ class OnDeviceAiRepositoryImpl @Inject constructor(private val context: Context)
             Log.e(TAG, "Task execution failed for $taskName", error)
             val errorCode = (error as? GenAiException)?.errorCode
             val reason = when (errorCode) {
+                601 -> "Failed to bind to the on-device AI service (Error 601). This can happen if 'Android AICore' needs an update, the device is unsupported, or the bootloader is unlocked."
+                602 -> "The on-device AI service needs to be updated (Error 602). Please check for updates to 'Android AICore' in the Google Play Store."
                 606 -> "The specific AI capability for $taskName was not found on this device (Error 606). This usually means the required on-device model feature is not available or AICore needs an update."
                 else -> "$taskName failed during execution."
             }
