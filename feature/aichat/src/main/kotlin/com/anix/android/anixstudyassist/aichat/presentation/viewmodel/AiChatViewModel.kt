@@ -12,6 +12,7 @@ import com.anix.android.anixstudyassist.aichat.presentation.voice.VoiceManager
 import com.anix.android.anixstudyassist.aikit.domain.model.AiCapability
 import com.anix.android.anixstudyassist.aikit.domain.model.AiExecutionResult
 import com.anix.android.anixstudyassist.aikit.domain.model.AiTask
+import com.anix.android.anixstudyassist.aikit.domain.model.OnlineAiResult
 import com.anix.android.anixstudyassist.aikit.domain.model.RewriteTone
 import com.anix.android.anixstudyassist.aikit.domain.usecase.ExecuteOnDeviceAiTaskUseCase
 import com.anix.android.anixstudyassist.aikit.domain.usecase.ExecuteOnlineAiTaskUseCase
@@ -25,7 +26,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -42,6 +42,11 @@ class AiChatViewModel @Inject constructor(
 
     companion object {
         private const val TAG = "ANIX_AiChat"
+    }
+
+    private sealed interface AiReply {
+        data class Success(val text: String) : AiReply
+        data class Error(val message: String) : AiReply
     }
 
     private val formatter = DateTimeFormatter.ofPattern("hh:mm a")
@@ -209,12 +214,12 @@ class AiChatViewModel @Inject constructor(
 
         when (selectedCapability) {
             null -> {
-                /** TODO: Future - replace placeholder normal chat response with actual conversational AI flow. */
-                appendMessage(
-                    text = "Normal chat response is not implemented yet.",
-                    isFromUser = false
-                )
-                _uiState.update { it.copy(isBusy = false) }
+                val parsedTask = parseAiTaskUseCase(text)
+                if (parsedTask == null) {
+                    executeOnlineChat(text, isVoice = false)
+                } else {
+                    executeTextTask(parsedTask)
+                }
             }
 
             TextChatCapability.SUMMARIZE -> executeTextTask(AiTask.Summarize(text))
@@ -270,20 +275,10 @@ class AiChatViewModel @Inject constructor(
 
     private fun executeTextTask(task: AiTask) {
         viewModelScope.launch {
-            when (val result = executeOnDeviceAiTaskUseCase(task)) {
-                is AiExecutionResult.Success -> {
-                    appendMessage(
-                        text = "Success (${result.taskLabel}):\n${result.output}",
-                        isFromUser = false
-                    )
-                    _uiState.update { it.copy(isBusy = false) }
-                }
-
-                is AiExecutionResult.Error -> {
-                    _uiState.update { it.copy(isBusy = false) }
-                    setErrorMessage("Error: ${result.reason}")
-                }
-            }
+            completeAiReply(
+                reply = executeOnDeviceTaskWithFallback(task),
+                isVoice = false
+            )
         }
     }
 
@@ -304,67 +299,110 @@ class AiChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             val lowercaseText = text.lowercase(Locale.ROOT)
-            val reply = withTimeoutOrNull(5000) {
-                when (lowercaseText) {
-                    "hi" -> {
-                        Log.d(TAG, "processVoiceInput: Handled as 'hi' command")
-                        buildCapabilitiesReply()
-                    }
+            val reply = when (lowercaseText) {
+                "hi" -> {
+                    Log.d(TAG, "processVoiceInput: Handled as 'hi' command")
+                    AiReply.Success(buildCapabilitiesReply())
+                }
 
-                    else -> {
-                        val task = parseAiTaskUseCase(text)
-                        if (task == null) {
-                            Log.d(
-                                TAG,
-                                "processVoiceInput: No on-device task, calling ExecuteOnlineAiTaskUseCase"
-                            )
-                            executeOnlineAiTaskUseCase(text)
-                        } else {
-                            Log.d(
-                                TAG,
-                                "processVoiceInput: Task parsed=$task, calling ExecuteOnDeviceAiTaskUseCase"
-                            )
-                            when (val result = executeOnDeviceAiTaskUseCase(task)) {
-                                is AiExecutionResult.Success -> {
-                                    Log.d(
-                                        TAG,
-                                        "processVoiceInput: On-device task succeeded. outputLength=${result.output.length}"
-                                    )
-                                    "Success (${result.taskLabel}):\n${result.output}"
-                                }
-
-                                is AiExecutionResult.Error -> {
-                                    Log.e(
-                                        TAG,
-                                        "processVoiceInput: On-device task failed. reason=${result.reason}"
-                                    )
-                                    "Error: ${result.reason}"
-                                }
-                            }
-                        }
+                else -> {
+                    val task = parseAiTaskUseCase(text)
+                    if (task == null) {
+                        Log.d(
+                            TAG,
+                            "processVoiceInput: No on-device task, calling ExecuteOnlineAiTaskUseCase"
+                        )
+                        executeOnlineChatReply(text)
+                    } else {
+                        Log.d(
+                            TAG,
+                            "processVoiceInput: Task parsed=$task, calling ExecuteOnDeviceAiTaskUseCase"
+                        )
+                        executeOnDeviceTaskWithFallback(task)
                     }
                 }
             }
 
-            if (reply == null) {
-                Log.w(TAG, "processVoiceInput: Task timed out after 5 seconds")
-                _uiState.update { it.copy(showRetryButton = true, isBusy = false) }
-                setErrorMessage("Request timed out. You can retry using the button below.")
-                return@launch
+            completeAiReply(reply = reply, isVoice = isVoice)
+        }
+    }
+
+    private fun executeOnlineChat(message: String, isVoice: Boolean) {
+        viewModelScope.launch {
+            completeAiReply(
+                reply = executeOnlineChatReply(message),
+                isVoice = isVoice
+            )
+        }
+    }
+
+    private suspend fun executeOnlineChatReply(message: String): AiReply {
+        return when (val result = executeOnlineAiTaskUseCase(message)) {
+            is OnlineAiResult.Success -> {
+                val prefix = if (result.usedSearchGrounding) {
+                    "Online AI response (search grounded):\n"
+                } else {
+                    "Online AI response:\n"
+                }
+                AiReply.Success(prefix + result.output)
             }
 
-            Log.d(TAG, "processVoiceInput: Final reply generated. Length=${reply.length}")
-            if (reply.startsWith("Error:")) {
-                _uiState.update { it.copy(isBusy = false) }
-                if (!isVoice || _uiState.value.isVoiceViewActive) {
-                    setErrorMessage(reply)
-                }
-            } else {
-                appendMessage(text = reply, isFromUser = false, isVoice = isVoice)
+            is OnlineAiResult.Error -> AiReply.Error(result.reason)
+        }
+    }
+
+    private suspend fun executeOnDeviceTaskWithFallback(task: AiTask): AiReply {
+        return when (val result = executeOnDeviceAiTaskUseCase(task)) {
+            is AiExecutionResult.Success -> {
+                Log.d(TAG, "On-device task succeeded. outputLength=${result.output.length}")
+                AiReply.Success("Success (${result.taskLabel}):\n${result.output}")
+            }
+
+            is AiExecutionResult.Error -> {
+                Log.e(TAG, "On-device task failed. reason=${result.reason}")
+                executeOnlineFallback(task, result.reason)
+            }
+        }
+    }
+
+    private suspend fun executeOnlineFallback(task: AiTask, onDeviceReason: String): AiReply {
+        return when (val fallback = executeOnlineAiTaskUseCase(buildOnlineFallbackPrompt(task))) {
+            is OnlineAiResult.Success -> {
+                AiReply.Success(
+                    buildString {
+                        appendLine(
+                            "Used online AI because on-device ${task.humanLabel()} was unavailable."
+                        )
+                        appendLine("Reason: $onDeviceReason")
+                        appendLine()
+                        append(fallback.output)
+                    }
+                )
+            }
+
+            is OnlineAiResult.Error -> {
+                AiReply.Error(
+                    "On-device ${task.humanLabel()} failed: $onDeviceReason\n" +
+                            "Online fallback also failed: ${fallback.reason}"
+                )
+            }
+        }
+    }
+
+    private fun completeAiReply(reply: AiReply, isVoice: Boolean) {
+        when (reply) {
+            is AiReply.Success -> {
+                appendMessage(text = reply.text, isFromUser = false, isVoice = isVoice)
                 if (isVoice) {
-                    voiceManager.speak(reply)
+                    voiceManager.speak(reply.text)
                 }
-                _uiState.update { it.copy(isBusy = false) }
+                _uiState.update { it.copy(isBusy = false, showRetryButton = false) }
+                setErrorMessage(null)
+            }
+
+            is AiReply.Error -> {
+                _uiState.update { it.copy(isBusy = false, showRetryButton = isVoice) }
+                setErrorMessage(reply.message)
             }
         }
     }
@@ -384,6 +422,19 @@ class AiChatViewModel @Inject constructor(
             appendLine("Here are my on-device capabilities:")
             lines.forEach { appendLine(it) }
         }.trim()
+    }
+
+    private fun buildOnlineFallbackPrompt(task: AiTask): String {
+        return when (task) {
+            is AiTask.Summarize ->
+                "Summarize the following text into concise bullets:\n\n${task.text}"
+
+            is AiTask.Proofread ->
+                "Proofread the following text. Return the corrected text only:\n\n${task.text}"
+
+            is AiTask.Rewrite ->
+                "Rewrite the following text in a ${task.tone.displayName()} style:\n\n${task.text}"
+        }
     }
 
     private fun buildRewriteTonePrompt(toneOptions: List<RewriteTone>): String {
@@ -446,6 +497,14 @@ class AiChatViewModel @Inject constructor(
             )
 
             else -> null
+        }
+    }
+
+    private fun AiTask.humanLabel(): String {
+        return when (this) {
+            is AiTask.Summarize -> "Summarization"
+            is AiTask.Proofread -> "Proofreading"
+            is AiTask.Rewrite -> "Rewriting (${tone.displayName()})"
         }
     }
 

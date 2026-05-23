@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.anix.android.anixstudyassist.aikit.domain.model.OnlineAiConfig
 import com.anix.android.anixstudyassist.ui.theme.AnixColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,8 +73,8 @@ fun AiSettingsScreen(onBackClick: () -> Unit) {
                 AiSettingsItem(
                     icon = Icons.Default.Psychology,
                     title = "AI Model",
-                    subtitle = "Choose the AI model",
-                    value = "Gemini 1.5 Flash"
+                    subtitle = "Current online AI model",
+                    value = OnlineAiConfig.MODEL_DISPLAY_NAME
                 )
             }
             item {
@@ -88,8 +89,8 @@ fun AiSettingsScreen(onBackClick: () -> Unit) {
                 AiSettingsItem(
                     icon = Icons.Default.Settings,
                     title = "API Key",
-                    subtitle = "Gemini API key for online features",
-                    value = "••••••••"
+                    subtitle = "Build-time Gemini API key for online features",
+                    value = if (OnlineAiConfig.isApiKeyConfigured) "Configured" else "Missing"
                 )
             }
             item { AiSettingsSectionHeader("LANGUAGE & INPUT") }
@@ -105,8 +106,8 @@ fun AiSettingsScreen(onBackClick: () -> Unit) {
                 AiSettingsItem(
                     icon = Icons.Default.Mic,
                     title = "Voice Input",
-                    subtitle = "Enable voice to text",
-                    value = ""
+                    subtitle = "Android platform speech recognizer",
+                    value = "Enabled"
                 )
             }
             item {

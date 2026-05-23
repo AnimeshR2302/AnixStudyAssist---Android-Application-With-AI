@@ -25,6 +25,8 @@ class VoiceManager @Inject constructor(
     private var speechRecognizer: SpeechRecognizer? = null
     private var textToSpeech: TextToSpeech? = null
     private var isTtsReady = false
+    private var isListening = false
+    private var prefersOnDeviceRecognition = false
 
     private var onResult: ((String) -> Unit)? = null
     private var onError: ((String) -> Unit)? = null
@@ -48,15 +50,21 @@ class VoiceManager @Inject constructor(
         this.onResult = onResult
         this.onError = onError
 
-        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+        val hasPlatformRecognizer = SpeechRecognizer.isRecognitionAvailable(context)
+        val hasOnDeviceRecognizer = SpeechRecognizer.isOnDeviceRecognitionAvailable(context)
+        if (!hasPlatformRecognizer && !hasOnDeviceRecognizer) {
             onError("Speech recognition not available on this device")
+            clearCallbacks()
             return
         }
 
+        if (isListening) {
+            speechRecognizer?.cancel()
+            isListening = false
+        }
+
         if (speechRecognizer == null) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
-                setRecognitionListener(this@VoiceManager)
-            }
+            speechRecognizer = createRecognizer(hasOnDeviceRecognizer)
         }
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -65,13 +73,38 @@ class VoiceManager @Inject constructor(
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
             )
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, prefersOnDeviceRecognition)
         }
 
-        speechRecognizer?.startListening(intent)
+        try {
+            isListening = true
+            speechRecognizer?.startListening(intent)
+        } catch (error: Throwable) {
+            Log.e(TAG, "startListening failed", error)
+            isListening = false
+            onError("Could not start speech recognition. Try again.")
+            clearCallbacks()
+        }
     }
 
     fun stopListening() {
+        isListening = false
         speechRecognizer?.stopListening()
+    }
+
+    private fun createRecognizer(hasOnDeviceRecognizer: Boolean): SpeechRecognizer {
+        prefersOnDeviceRecognition = hasOnDeviceRecognizer
+        val recognizer = if (hasOnDeviceRecognizer) {
+            Log.d(TAG, "Using on-device speech recognizer")
+            SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
+        } else {
+            Log.d(TAG, "Using platform speech recognizer")
+            SpeechRecognizer.createSpeechRecognizer(context)
+        }
+        return recognizer.apply {
+            setRecognitionListener(this@VoiceManager)
+        }
     }
 
     private fun clearCallbacks() {
@@ -89,6 +122,7 @@ class VoiceManager @Inject constructor(
     }
 
     fun shutdown() {
+        isListening = false
         speechRecognizer?.destroy()
         speechRecognizer = null
         textToSpeech?.shutdown()
@@ -125,6 +159,7 @@ class VoiceManager @Inject constructor(
             else -> "Unknown error"
         }
         Log.e(TAG, "onError: $errorMessage ($error)")
+        isListening = false
         onError?.invoke(errorMessage)
         clearCallbacks()
     }
@@ -136,7 +171,10 @@ class VoiceManager @Inject constructor(
             val bestMatch = matches[0]
             Log.d(TAG, "onResults: bestMatch='$bestMatch'")
             onResult?.invoke(bestMatch)
+        } else {
+            onError?.invoke("No speech recognized. Try again.")
         }
+        isListening = false
         clearCallbacks()
     }
 

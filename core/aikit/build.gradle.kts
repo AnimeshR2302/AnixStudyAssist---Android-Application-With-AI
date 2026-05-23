@@ -31,9 +31,17 @@ android {
             localProperties.load(localPropertiesFile.inputStream())
         }
 
+        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY")
+            ?: localProperties.getProperty("MY_API_KEY")
+            ?: ""
+        val escapedGeminiApiKey = geminiApiKey
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+
         buildConfigField(
-            "String", "GEMINI_API_KEY",
-            localProperties.getProperty("MY_API_KEY") ?: ""
+            "String",
+            "GEMINI_API_KEY",
+            "\"$escapedGeminiApiKey\""
         )
     }
 

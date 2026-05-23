@@ -182,8 +182,9 @@ class OnDeviceAiRepositoryImpl @Inject constructor(private val context: Context)
                 FeatureStatus.DOWNLOADING -> {
                     Log.d(
                         TAG,
-                        "Feature already downloading for $taskName. Inference request will wait on model availability."
+                        "Feature already downloading for $taskName. Returning retryable status."
                     )
+                    return featureStatusError(taskName, initialStatus)
                 }
 
                 else -> return featureStatusError(taskName, initialStatus)
