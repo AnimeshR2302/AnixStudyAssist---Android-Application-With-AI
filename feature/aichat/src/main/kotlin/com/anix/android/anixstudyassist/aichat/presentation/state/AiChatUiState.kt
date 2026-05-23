@@ -34,6 +34,7 @@ data class AiChatUiState(
     val rewriteToneOptions: List<RewriteTone> = emptyList(),
     val selectedCapability: TextChatCapability? = null,
     val selectedRewriteTone: RewriteTone? = null,
+    val currentProcessingFeature: String? = null,
     val messages: List<ChatMessage> = listOf(
         ChatMessage(
             text = "Hello! I'm AnixAI. Use the + button to pick an on-device capability, or send a normal message.",
@@ -41,4 +42,8 @@ data class AiChatUiState(
             isFromUser = false
         )
     )
-)
+) {
+    fun shouldShowMicButton(): Boolean {
+        return inputText.isBlank() && selectedCapability == null && !isListening
+    }
+}

@@ -69,6 +69,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -271,13 +272,16 @@ private fun TextChatView(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        ProcessingStatusBanner(processingFeature = state.currentProcessingFeature)
+
         ChatInput(
             value = state.inputText,
             isBusy = !isInputEnabled,
             isListening = state.isListening,
             onValueChange = onInputChanged,
             onSendClick = onSendClicked,
-            onMicClick = onMicClicked
+            onMicClick = onMicClicked,
+            shouldShowMicButton = state.shouldShowMicButton()
         )
     }
 }
@@ -687,13 +691,36 @@ private fun ChatBubble(message: ChatMessage) {
 }
 
 @Composable
+private fun ProcessingStatusBanner(processingFeature: String?) {
+    val colors = AnixColors.current
+    if (processingFeature == null) return
+
+    Surface(
+        color = Color.Transparent,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = processingFeature,
+            color = colors.primary,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
 private fun ChatInput(
     value: String,
     isBusy: Boolean,
     isListening: Boolean,
     onValueChange: (String) -> Unit,
     onSendClick: () -> Unit,
-    onMicClick: () -> Unit
+    onMicClick: () -> Unit,
+    shouldShowMicButton: Boolean = true
 ) {
     val colors = AnixColors.current
 
@@ -707,16 +734,21 @@ private fun ChatInput(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = onMicClick,
-                enabled = !isBusy,
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = if (isListening) Color.Red else Color.Transparent,
-                    contentColor = if (isListening) Color.White else colors.primary
-                )
-            ) {
-                Icon(Icons.Default.Mic, contentDescription = "Voice Chat")
+            Spacer(modifier = Modifier.width(16.dp))
+
+            if (shouldShowMicButton) {
+                IconButton(
+                    onClick = onMicClick,
+                    enabled = !isBusy,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = if (isListening) Color.Red else Color.Transparent,
+                        contentColor = if (isListening) Color.White else colors.primary
+                    )
+                ) {
+                    Icon(Icons.Default.Mic, contentDescription = "Voice Chat")
+                }
             }
+            
             Spacer(modifier = Modifier.width(4.dp))
             TextField(
                 value = value,
@@ -742,17 +774,20 @@ private fun ChatInput(
                 shape = RoundedCornerShape(24.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            IconButton(
-                onClick = onSendClick,
-                enabled = !isBusy && value.isNotBlank(),
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = Color(0xFF6200EE),
-                    contentColor = Color.White,
-                    disabledContainerColor = Color(0xFFB39DDB),
-                    disabledContentColor = Color.White
-                )
-            ) {
-                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+
+            if (!shouldShowMicButton) {
+                IconButton(
+                    onClick = onSendClick,
+                    enabled = !isBusy && value.isNotBlank(),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = Color(0xFF6200EE),
+                        contentColor = Color.White,
+                        disabledContainerColor = Color(0xFFB39DDB),
+                        disabledContentColor = Color.White
+                    )
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
+                }
             }
         }
     }

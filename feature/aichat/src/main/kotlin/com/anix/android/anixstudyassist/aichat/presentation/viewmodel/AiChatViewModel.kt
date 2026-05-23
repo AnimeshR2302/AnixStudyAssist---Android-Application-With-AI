@@ -233,16 +233,34 @@ class AiChatViewModel @Inject constructor(
             null -> {
                 val parsedTask = parseAiTaskUseCase(text)
                 if (parsedTask == null) {
+                    _uiState.update { it.copy(currentProcessingFeature = "Using Gemini 2.5 Flash") }
                     executeOnlineChat(text, isVoice = false)
                 } else {
+                    _uiState.update {
+                        it.copy(
+                            currentProcessingFeature = "OnDevice ${
+                                getTaskDisplayName(
+                                    parsedTask
+                                )
+                            } Processing"
+                        )
+                    }
                     executeTextTask(parsedTask)
                 }
             }
 
-            TextChatCapability.SUMMARIZE -> executeTextTask(AiTask.Summarize(text))
-            TextChatCapability.PROOFREAD -> executeTextTask(AiTask.Proofread(text))
+            TextChatCapability.SUMMARIZE -> {
+                _uiState.update { it.copy(currentProcessingFeature = "OnDevice Summarize Processing") }
+                executeTextTask(AiTask.Summarize(text))
+            }
+
+            TextChatCapability.PROOFREAD -> {
+                _uiState.update { it.copy(currentProcessingFeature = "OnDevice Proofread Processing") }
+                executeTextTask(AiTask.Proofread(text))
+            }
             TextChatCapability.REWRITE -> {
                 if (selectedTone != null) {
+                    _uiState.update { it.copy(currentProcessingFeature = "OnDevice Rewrite Processing") }
                     executeTextTask(AiTask.Rewrite(text, selectedTone))
                 } else {
                     // This case should ideally be blocked by UI (input disabled)
@@ -292,12 +310,22 @@ class AiChatViewModel @Inject constructor(
                             TAG,
                             "processVoiceInput: No on-device task, calling ExecuteOnlineAiTaskUseCase"
                         )
+                        _uiState.update { it.copy(currentProcessingFeature = "Using Gemini 2.5 Flash") }
                         executeOnlineChatReply(text)
                     } else {
                         Log.d(
                             TAG,
                             "processVoiceInput: Task parsed=$task, calling ExecuteOnDeviceAiTaskUseCase"
                         )
+                        _uiState.update {
+                            it.copy(
+                                currentProcessingFeature = "OnDevice ${
+                                    getTaskDisplayName(
+                                        task
+                                    )
+                                } Processing"
+                            )
+                        }
                         executeOnDeviceTaskWithFallback(task)
                     }
                 }
@@ -346,6 +374,7 @@ class AiChatViewModel @Inject constructor(
     }
 
     private suspend fun executeOnlineFallback(task: AiTask, onDeviceReason: String): AiReply {
+        _uiState.update { it.copy(currentProcessingFeature = "Fallback Gemini 2.5 Flash") }
         return when (val fallback = executeOnlineAiTaskUseCase(buildOnlineFallbackPrompt(task))) {
             is OnlineAiResult.Success -> {
                 AiReply.Success(
@@ -376,12 +405,24 @@ class AiChatViewModel @Inject constructor(
                 if (isVoice) {
                     voiceManager.speak(reply.text)
                 }
-                _uiState.update { it.copy(isBusy = false, showRetryButton = false) }
+                _uiState.update {
+                    it.copy(
+                        isBusy = false,
+                        showRetryButton = false,
+                        currentProcessingFeature = null
+                    )
+                }
                 setErrorMessage(null)
             }
 
             is AiReply.Error -> {
-                _uiState.update { it.copy(isBusy = false, showRetryButton = isVoice) }
+                _uiState.update {
+                    it.copy(
+                        isBusy = false,
+                        showRetryButton = isVoice,
+                        currentProcessingFeature = null
+                    )
+                }
                 setErrorMessage(reply.message)
             }
         }
@@ -469,6 +510,14 @@ class AiChatViewModel @Inject constructor(
             } else {
                 firstCharacter.toString()
             }
+        }
+    }
+
+    private fun getTaskDisplayName(task: AiTask): String {
+        return when (task) {
+            is AiTask.Summarize -> "Summarize"
+            is AiTask.Proofread -> "Proofread"
+            is AiTask.Rewrite -> "Rewrite"
         }
     }
 }
