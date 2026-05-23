@@ -735,21 +735,6 @@ private fun ChatInput(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Spacer(modifier = Modifier.width(16.dp))
-
-            if (shouldShowMicButton) {
-                IconButton(
-                    onClick = onMicClick,
-                    enabled = !isBusy,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = if (isListening) Color.Red else Color.Transparent,
-                        contentColor = if (isListening) Color.White else colors.primary
-                    )
-                ) {
-                    Icon(Icons.Default.Mic, contentDescription = "Voice Chat")
-                }
-            }
-            
-            Spacer(modifier = Modifier.width(4.dp))
             TextField(
                 value = value,
                 onValueChange = onValueChange,
@@ -775,7 +760,18 @@ private fun ChatInput(
             )
             Spacer(modifier = Modifier.width(8.dp))
 
-            if (!shouldShowMicButton) {
+            if (shouldShowMicButton) {
+                IconButton(
+                    onClick = onMicClick,
+                    enabled = !isBusy,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = if (isListening) Color.Red else Color.Transparent,
+                        contentColor = if (isListening) Color.White else colors.primary
+                    )
+                ) {
+                    Icon(Icons.Default.Mic, contentDescription = "Voice Chat")
+                }
+            } else {
                 IconButton(
                     onClick = onSendClick,
                     enabled = !isBusy && value.isNotBlank(),
